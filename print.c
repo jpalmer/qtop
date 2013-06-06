@@ -65,19 +65,26 @@ void printnode(const node* n,const user* u)
     {
         int i=0;
         long long int requestedram=0L;
-        printf("%s  %s%5.2f%s  ",n->name,n->loadave > (float)n->cores+1.5?Highlight:"",n->loadave,resetstr);
-        for (;i<n->users_using_count;i++)
+        if (n->up==0)
         {
-            requestedram += n->users_using[i]->ramrequested;
-            int myuserno=UserNo(u,n->users_using[i]->owner);
-            printf ("%s%i%s",UserColourStr(myuserno),myuserno,resetstr);
+            printf("%s  %s%5.2f%s  ",n->name,n->loadave > (float)n->cores+1.5?Highlight:"",n->loadave,resetstr);
+            for (;i<n->users_using_count;i++)
+            {
+                requestedram += n->users_using[i]->ramrequested;
+                int myuserno=UserNo(u,n->users_using[i]->owner);
+                printf ("%s%i%s",UserColourStr(myuserno),myuserno,resetstr);
+            }
+            for (;i<n->cores;i++) {putchar('-');}
+            for (;i<MAXCPUS;i++) {putchar(' ');}
+            printf("  ");
+            if (n->ramfree<0) {printf("%s",Highlight);}
+            printf("%6.2fGB%s   %5.2fGB",((double)n->ramfree)/1024.0/1024.0,resetstr,(double)(n->physram-requestedram )/1024.0/1024.0);
+            printf("\n");
         }
-        for (;i<n->cores;i++) {putchar('-');}
-        for (;i<MAXCPUS;i++) {putchar(' ');}
-        printf("  ");
-        if (n->ramfree<0) {printf("%s",Highlight);}
-        printf("%6.2fGB%s   %5.2fGB",((double)n->ramfree)/1024.0/1024.0,resetstr,(double)(n->physram-requestedram )/1024.0/1024.0);
-        printf("\n");
+        else
+        {
+            printf("%s %s  ERROR ERROR ERROR%s\n",n->name,Highlight,resetstr);
+        }
         n=n->next;
     }
 }

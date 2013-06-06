@@ -14,6 +14,7 @@ struct user
 };
 struct node
 { //some example values
+    char up;
     const char* name; //node23
     int cores;//8
     double loadave;//8.12734

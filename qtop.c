@@ -46,6 +46,10 @@ node* GetNodeInfo(const int connection)
             {
                 cn->cores=atoi(at->value);
             }
+            if (!strcmp(at->name,"state"))
+            {
+                if (!strcmp(at->value,"down")) {cn->up=1;} else {cn->up=0;}
+            }
             if (!strcmp(at->name,"status"))
             {
                 char* totmem = strstr(at->value,"totmem=")+7;
@@ -193,6 +197,7 @@ void coalescejobs (job* j) //explot the fact that jobs are returned in order - i
 int main()
 {
     int connection = pbs_connect("localhost");
+    if (connection==-1) {printf("%s\n",pbs_strerror(pbs_errno));}
     user* users;
     node* n = GetNodeInfo(connection);
     job* j = GetJobInfo(connection,n,&users);
