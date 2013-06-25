@@ -1,3 +1,4 @@
+//TODO: there is a showstart app installed which guesses when a job will be able to start - could be useful to include
 #include <pbs_error.h> //pbs
 #include <pbs_ifl.h>   //more pbs
 #include <string.h> //strchr
@@ -183,14 +184,23 @@ void coalescejobs (job* j) //explot the fact that jobs are returned in order - i
     {
         job * next = j-> next;
         job* prev=j;
-        while (next != NULL && next->number==j->number && next->state==j->state)
+        while (next != NULL && next->number==j->number)  
         {
-            j->corecount+=next->corecount;
-            prev=next;
-            next=next->next;
+            if (next->state==j->state)
+            {
+                j->corecount+=next->corecount;
+                prev->next=next->next; //effectively delete this sub-job and store the info in a parent job
+                prev->usernext=next->usernext; //use this pointer once next is freed
+                free(next);
+                next=prev->usernext;
+            }
+            else
+            {
+                prev=next;
+                next=next->next;
+            }
+            
         }
-        j->next=prev==NULL?NULL:prev->next;
-        j->usernext=next==NULL?NULL:prev->usernext;
         j=j->next;
     }
 }
