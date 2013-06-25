@@ -92,7 +92,7 @@ void printmyjobs(const user* u)
 {
     char * me = getlogin();
     printf("MY JOBS\n");
-    printf("No    state CPU   RAM\n");
+    printf("No    state CPU  RAM\n");
     while (u != NULL)
     {
         if (!strcmp(me,u->name))
@@ -104,7 +104,7 @@ void printmyjobs(const user* u)
             }
             while (j != NULL)
             {
-                printf("%i    %c %i %5.2fGB\n",j->number,StatStr( j),j->corecount,(double)j->ramrequested/1024.0/1024.0);
+                printf("%i    %c %3i %5.2fGB\n",j->number,StatStr( j),j->corecount,(double)j->ramrequested/1024.0/1024.0);
             j=j->usernext;
             }
         }
