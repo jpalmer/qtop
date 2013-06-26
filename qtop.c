@@ -207,7 +207,7 @@ void coalescejobs (job* j) //explot the fact that jobs are returned in order - i
 int main()
 {
     int connection = pbs_connect("localhost");
-    if (connection==-1) {printf("%s\n",pbs_strerror(pbs_errno));}
+    if (connection==-1) {printf("pbs error: %s\n",pbs_strerror(pbs_errno)); return EXIT_FAILURE;}
     user* users;
     node* n = GetNodeInfo(connection);
     job* j = GetJobInfo(connection,n,&users);
@@ -218,5 +218,5 @@ int main()
     printq(j);
     printmyjobs(users);
     checkColour();
-    return 0;
+    return EXIT_SUCCESS;
 }
