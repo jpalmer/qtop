@@ -49,7 +49,7 @@ node* GetNodeInfo(const int connection)
             }
             if (!strcmp(at->name,"state"))
             {
-                if (!strcmp(at->value,"down")) {cn->up=1;} else {cn->up=0;}
+                if (strstr(at->value,"down")!= NULL ) {cn->up=1;} else {cn->up=0;}
             }
             if (!strcmp(at->name,"status"))
             {
