@@ -83,7 +83,7 @@ void printnode(const node* n,const user* u)
         }
         else
         {
-            printf("%s %s  ERROR ERROR ERROR%s\n",n->name,Highlight,resetstr);
+            printf("%s%s  ERROR ERROR ERROR ERROR ERROR ERROR %s\n",Highlight,n->name,resetstr);
         }
         n=n->next;
     }
