@@ -27,9 +27,10 @@ char StatStr (const job* j)
         case Q:return 'Q';
         case R:return 'R';
         case C:return 'C';
+        default:
+            printf("error in state\n");
+            return 'E';
     }
-    printf("error in state\n");
-    return 'E';
 }
 int UserNo (const user* u,const user* cu)
 {
@@ -77,7 +78,7 @@ void printnode(const node* n,const user* u)
                 int myuserno=UserNo(u,n->users_using[i]->owner);
                 printf ("%s%i%s",UserColourStr(myuserno),myuserno,resetstr);
             }
-            for (;i<n->cores;i++) {putchar('-');}
+            for (;i<n->cores;i++) {putchar('-');} //fill in blank cpu
             for (;i<MAXCPUS;i++) {putchar(' ');}
             if (n->ramfree<0) {printf("%s",Highlight);}
             printf("  %6.2fGB%s   %5.2fGB",((double)n->ramfree)/1024.0/1024.0,resetstr,(double)(n->physram-requestedram )/1024.0/1024.0);
