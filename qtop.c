@@ -1,4 +1,3 @@
-//TODO: there is a showstart app installed which guesses when a job will be able to start - could be useful to include
 #include <pbs_error.h> //pbs
 #include <pbs_ifl.h>   //more pbs
 #include <string.h> //strchr
@@ -29,7 +28,6 @@ void AggregateUserInfo(user * u)
         u=u->next;
     }
 }
-
 //Get info from the equivalent of pbsnodes
 node* GetNodeInfo(const int connection)
 {
@@ -73,22 +71,16 @@ node* GetNodeInfo(const int connection)
     }
     return n;
 }
-
-            
 user* adduser (user* u,char* name)
 {
-    if (u->name==NULL)
-    {
-        u->name=name;
-    }
-    else
+    if (u->name != NULL)
     {
         while (u->next != NULL)
         {u=u->next;}
         u->next=malloc(sizeof(user));
         u=u->next;
-        u->name=name;
     }
+    u->name=name;
     u->jobs=NULL;
     u->jobsend=NULL;
     u->runcount=0;
@@ -96,12 +88,12 @@ user* adduser (user* u,char* name)
     u->next=NULL;
     return u;
 }
-job* GetJobInfo(const int connection,node* n,user** u)
+job* GetJobInfo(const int connection,node* n,user** u) //u is a second return value
 {
     struct batch_status* qstat=pbs_statjob(connection,NULL,NULL,NULL);
-    user* users=malloc(sizeof(user));//TODO: if user not found add an extra user with given name
+    user* users=malloc(sizeof(user));
     *u=users;
-    users->name=NULL;
+    users->name=NULL;//avoid accessing unint memory
     job* ret = malloc(sizeof(job));
     job* curjob=ret;
     while (qstat != NULL)
@@ -164,7 +156,6 @@ job* GetJobInfo(const int connection,node* n,user** u)
                     val++;
                 }
             } 
-      //      printf("%s\n",attribs->name);
             attribs=attribs->next;
         }
         qstat=qstat->next;
@@ -182,7 +173,7 @@ void coalescejobs (job* j) //explot the fact that jobs are returned in order - i
 {
     while (j != NULL)
     {
-        job * next = j-> next;
+        job* next = j-> next;
         job* prev=j;
         while (next != NULL && next->number==j->number)  
         {
@@ -199,7 +190,6 @@ void coalescejobs (job* j) //explot the fact that jobs are returned in order - i
                 prev=next;
                 next=next->next;
             }
-            
         }
         j=j->next;
     }
