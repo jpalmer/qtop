@@ -2,7 +2,7 @@
 #include <unistd.h> //getlogin
 #include <string.h> //strcmp
 #include <stdio.h> //printf
-
+#include <time.h>  //maketime
 #include <stdlib.h> //malloc
 #include "print.h"
 const char* colours[7]= {"\x1B[31m","\x1b[32m","\x1b[33m","\x1b[34m","\x1b[35m","\x1b[36m",""};
@@ -60,6 +60,7 @@ int UserCount(const user* u)
 }
 void printnode(const node* n,const user* u)
 {
+    printf("%sNODES%s\n",Highlight,resetstr);
     printf("Name     Load  CPU            MemFree   MemRequestable\n");
     while (n != NULL)
     {
@@ -91,8 +92,8 @@ void printnode(const node* n,const user* u)
 void printmyjobs(const user* u)
 {
     char * me = getlogin();
-    printf("MY JOBS\n");
-    printf("No    state CPU  RAM\n");
+    printf("%sMY JOBS%s\n",Highlight,resetstr);
+    printf("No    state CPU  RAM     STARTING IN\n");
     while (u != NULL)
     {
         if (!strcmp(me,u->name))
@@ -104,7 +105,19 @@ void printmyjobs(const user* u)
             }
             while (j != NULL)
             {
-                printf("%i    %c %3i %5.2fGB\n",j->number,StatStr( j),j->corecount,(double)j->ramrequested/1024.0/1024.0);
+                printf("%i    %c %3i %5.2fGB",j->number,StatStr( j),j->corecount,(double)j->ramrequested/1024.0/1024.0);
+                if (j->state==Q) //if job queued then call showstart to print the start time for the job (based on reported runtimes, job likely to start even earlier than this
+                {
+                    char* command = malloc(1024);
+                    sprintf(command,"showstart %i | grep start | tr -s ' ' | cut -d ' ' -f4",j->number); //get time to start
+                    FILE* pout=popen(command,"r");
+                    char* datebuffer = malloc(100);//100 characters should be enough
+                    fgets(datebuffer,100,pout);
+                    char* d = strchr(datebuffer,'\n');
+                    d[0]=0; 
+                    printf("  %11s\n",datebuffer);
+                }
+                else {printf("\n");}
             j=j->usernext;
             }
         }
@@ -113,7 +126,7 @@ void printmyjobs(const user* u)
 }
 void printuser(const user* u)
 {
-    printf("USERS\n");
+    printf("%sUSERS%s\n",Highlight,resetstr);
     printf("N  Name         Run  Queue  Running jobs             Queued jobs\n");
     const user* start=u;
     const int count = UserCount(u);
@@ -138,7 +151,7 @@ void printuser(const user* u)
                     j=j->usernext;
                 }
                 if (j != NULL && j->state==R) {accum += printf ("...");}
-                for (;accum<25;accum++) {printf(" ");}
+                for (;accum<25;accum++) {printf(" ");} //fill in some white space
                 i=0;
                 j = u->jobs;
                 while(i<2 && j != NULL)
@@ -147,7 +160,7 @@ void printuser(const user* u)
                     {
                     i ++;
                     accum+= printf("%ix%i ",j->number,j->corecount);
-                    }
+                                       }
                     j=j->usernext;
                 }
                 if (j != NULL && j->state==Q) {accum += printf ("...");}
@@ -186,7 +199,7 @@ void printq(const job* j)
         }
         j =j->next;
     }
-    printf("QUEUES\n");
+    printf("%sQUEUES%s\n",Highlight,resetstr);
     printf("Name           Q Length     Q Ram  NextJob: ID        USER CPU         RAM \n");
     for (int i=0;i<foundqcount;i++)
     {
