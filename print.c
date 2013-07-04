@@ -5,10 +5,12 @@
 #include <time.h>  //maketime
 #include <stdlib.h> //malloc
 #include "print.h"
-const char* colours[7]= {"\x1B[31m","\x1b[32m","\x1b[33m","\x1b[34m","\x1b[35m","\x1b[36m",""};
-const char* Highlight="\x1b[41m\x1b[32m";
-const char* resetstr="\x1b[0m";
+const char* colours[7]  =   {"\x1B[31m","\x1b[32m","\x1b[33m","\x1b[34m","\x1b[35m","\x1b[36m",""};
+const char* Highlight   =   "\x1b[41m\x1b[32m";
+const char* bold        =   "\x1b[1m";
+const char* resetstr    =   "\x1b[0m";
 char * me = NULL;
+void heading(const char* s) {printf("%s%s%s\n",bold,s,resetstr); }
 void checkColour()
 {
    if(!isatty(fileno(stdout)))
@@ -60,7 +62,7 @@ int UserCount(const user* u)
 }
 void printnode(const node* n,const user* u)
 {
-    printf("%sNODES%s\n",Highlight,resetstr);
+    heading("NODES");
     printf("Name     Load  CPU            MemFree   MemRequestable\n");
     while (n != NULL)
     {
@@ -77,9 +79,8 @@ void printnode(const node* n,const user* u)
             }
             for (;i<n->cores;i++) {putchar('-');}
             for (;i<MAXCPUS;i++) {putchar(' ');}
-            printf("  ");
             if (n->ramfree<0) {printf("%s",Highlight);}
-            printf("%6.2fGB%s   %5.2fGB",((double)n->ramfree)/1024.0/1024.0,resetstr,(double)(n->physram-requestedram )/1024.0/1024.0);
+            printf("  %6.2fGB%s   %5.2fGB",((double)n->ramfree)/1024.0/1024.0,resetstr,(double)(n->physram-requestedram )/1024.0/1024.0);
             printf("\n");
         }
         else
@@ -92,7 +93,7 @@ void printnode(const node* n,const user* u)
 void printmyjobs(const user* u)
 {
     char * me = getlogin();
-    printf("%sMY JOBS%s\n",Highlight,resetstr);
+    heading("MY JOBS");
     printf("No    state CPU  RAM     STARTING IN\n");
     while (u != NULL)
     {
@@ -113,8 +114,7 @@ void printmyjobs(const user* u)
                     FILE* pout=popen(command,"r");
                     char* datebuffer = malloc(100);//100 characters should be enough
                     fgets(datebuffer,100,pout);
-                    char* d = strchr(datebuffer,'\n');
-                    d[0]=0; 
+                    strchr(datebuffer,'\n')[0]=0; //cut adds an extra newline - annoying
                     printf("  %11s\n",datebuffer);
                 }
                 else {printf("\n");}
@@ -126,7 +126,7 @@ void printmyjobs(const user* u)
 }
 void printuser(const user* u)
 {
-    printf("%sUSERS%s\n",Highlight,resetstr);
+    heading("USERS");
     printf("N  Name         Run  Queue  Running jobs             Queued jobs\n");
     const user* start=u;
     const int count = UserCount(u);
@@ -199,7 +199,7 @@ void printq(const job* j)
         }
         j =j->next;
     }
-    printf("%sQUEUES%s\n",Highlight,resetstr);
+    heading("QUEUES");
     printf("Name           Q Length     Q Ram  NextJob: ID        USER CPU         RAM \n");
     for (int i=0;i<foundqcount;i++)
     {
