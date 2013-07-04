@@ -117,6 +117,7 @@ void printmyjobs(const user* u)
                     fgets(datebuffer,100,pout);
                     strchr(datebuffer,'\n')[0]=0; //cut adds an extra newline - annoying
                     printf("  %11s\n",datebuffer);
+                    free(command);free(datebuffer);
                 }
                 else {printf("\n");}
             j=j->usernext;
@@ -124,6 +125,22 @@ void printmyjobs(const user* u)
         }
         u=u->next;
     }
+}
+int printSomeJobs(const job* j, const jobstate s)
+{
+    int i = 0;
+    int accum=0;
+    while(i<2 && j != NULL) //print the first 2 running jobs
+    {
+       if (j->state==s)
+        {
+            i++;
+            accum+= printf("%ix%i ",j->number,j->corecount);
+        }
+        j=j->usernext;
+    }
+    while (j != NULL) {if (j->state==s) {accum += printf ("...");break;}j=j->next;}
+    return accum;
 }
 void printuser(const user* u)
 {
@@ -139,32 +156,9 @@ void printuser(const user* u)
             if (UserNo(start,u)==i)
             {
                 printf ("%s%i  %-10s  %4i   %4i  ",UserColourStr(i),i,u->name,u->runcount,u->queuecount);
-                int i=0;
-                int accum=0;
-                const job * j = u->jobs;
-                while(i<2 && j != NULL)
-                {
-                    if (j->state==R)
-                    {
-                    i ++;
-                    accum+= printf("%ix%i ",j->number,j->corecount);
-                    }
-                    j=j->usernext;
-                }
-                if (j != NULL && j->state==R) {accum += printf ("...");}
+                int accum = printSomeJobs(u->jobs,R);
                 for (;accum<25;accum++) {printf(" ");} //fill in some white space
-                i=0;
-                j = u->jobs;
-                while(i<2 && j != NULL)
-                {
-                    if (j->state==Q)
-                    {
-                    i ++;
-                    accum+= printf("%ix%i ",j->number,j->corecount);
-                                       }
-                    j=j->usernext;
-                }
-                if (j != NULL && j->state==Q) {accum += printf ("...");}
+                accum += printSomeJobs(u->jobs,Q);
                 printf("%s\n",resetstr);
             }
             u=u->next;

@@ -16,6 +16,7 @@ Queue lengths
 
 fancy coloured output!!
 
+time until a job starts (using showstart)
 
 Sample output
 -------------
