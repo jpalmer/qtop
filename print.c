@@ -193,15 +193,18 @@ void printq(const job* j)
         }
         j =j->next;
     }
-    heading("QUEUES");
-    printf("Name           Q Length     Q Ram  NextJob: ID        USER CPU         RAM \n");
-    for (int i=0;i<foundqcount;i++)
+    if (foundqcount != 0)
     {
-        const qstats q = queues[i];
-        const job j = *q.nextjob;
-             //qname      qCPU  qram           jno juser jcpu jram
-        printf("%-14s     %4i  %6.2fGB       %6i  %10s  %2i  %8.2fGB\n",q.name,q.cpucount,(float)q.ram/1024.0/1024.0,
-                j.number,j.owner->name,j.corecount, (float)j.ramrequested/1024.0/1024.0);
+        heading("QUEUES");
+        printf("Name           Q Length     Q Ram  NextJob: ID        USER CPU         RAM \n");
+        for (int i=0;i<foundqcount;i++)
+        {
+            const qstats q = queues[i];
+            const job j = *q.nextjob;
+                 //qname      qCPU  qram           jno juser jcpu jram
+            printf("%-14s     %4i  %6.2fGB       %6i  %10s  %2i  %8.2fGB\n",q.name,q.cpucount,(float)q.ram/1024.0/1024.0,
+                    j.number,j.owner->name,j.corecount, (float)j.ramrequested/1024.0/1024.0);
+        }
     }
     free(queues);
 }
