@@ -38,10 +38,6 @@ struct job
     char * queue;
     long long int ramrequested;
 };
-struct Que
-{
-    char* name;
-};
 //not in .c file because it breaks syntax highlighting
 #define findN(x,namein) \
        ({ typeof (x) t=x;\

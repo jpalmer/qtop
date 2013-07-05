@@ -86,7 +86,7 @@ void printnode(const node* n,const user* u)
             for (;i<n->cores;i++) {putchar('-');} //fill in blank cpu
             for (;i<MAXCPUS;i++) {putchar(' ');}
             if (n->ramfree<0) {printf("%s",Highlight);}
-            printf("  %6.2fGB%s   %5.2fGB %s",((double)n->ramfree)/1024.0/1024.0,resetstr,(double)(n->physram-requestedram )/1024.0/1024.0, n->props);
+            printf("  %6.2fGB%s   %5.2fGB",((double)n->ramfree)/1024.0/1024.0,resetstr,(double)(n->physram-requestedram )/1024.0/1024.0);
             printf("\n");
         }
         else
