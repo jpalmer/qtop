@@ -32,7 +32,7 @@ char StatStr (const job* j)
             return 'E';
     }
 }
-int UserNo (const user* u,const user* cu)
+int UserNo (const user* u,const user* cu) //algorithm for allocating numbers is currently n^2 - could make it better with sorting, but typically number of users is small, so current method is simpler
 {
     if (me == NULL) { me = getlogin();}
     if (!(strcmp(cu->name,me))) {return 0;}
@@ -94,16 +94,15 @@ void printnode(const node* n,const user* u)
 void printmyjobs(const user* u)
 {
     char * me = getlogin();
-    heading("MY JOBS");
-    printf("No    state CPU  RAM     STARTING IN\n");
     while (u != NULL)
     {
         if (!strcmp(me,u->name))
         {
             const job * j=u->jobs;
-            if (j == NULL)
+            if (j != NULL)
             {
-                printf("No jobs for me\n");
+                heading("MY JOBS");
+                printf("No    state CPU  RAM     STARTING IN\n");
             }
             while (j != NULL)
             {
