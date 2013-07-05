@@ -5,10 +5,14 @@
 #include <time.h>  //maketime
 #include <stdlib.h> //malloc
 #include "print.h"
-const char* colours[7]  =   {"\x1B[31m","\x1b[32m","\x1b[33m","\x1b[34m","\x1b[35m","\x1b[36m",""};
+//globals
+const char* colours[7]  =   {"\x1B[31m", "\x1b[32m", "\x1b[33m", "\x1b[34m", "\x1b[35m", "\x1b[36m",""};
 const char* Highlight   =   "\x1b[41m\x1b[32m";
 const char* bold        =   "\x1b[1m";
+const char* underline   =   "\x1b[4m";
 const char* resetstr    =   "\x1b[0m";
+const char* boxon       =   "\x1b(0";
+const char* boxoff       =  "\x1b(B";
 char * me = NULL;
 void heading(const char* s) {printf("%s%s%s\n",bold,s,resetstr); }
 void checkColour()
@@ -17,6 +21,7 @@ void checkColour()
    {
         Highlight="";
         resetstr="";
+        underline="";
         for (int i=0;i<6;i++) {colours[i]="";}
    }
 }
@@ -81,7 +86,7 @@ void printnode(const node* n,const user* u)
             for (;i<n->cores;i++) {putchar('-');} //fill in blank cpu
             for (;i<MAXCPUS;i++) {putchar(' ');}
             if (n->ramfree<0) {printf("%s",Highlight);}
-            printf("  %6.2fGB%s   %5.2fGB",((double)n->ramfree)/1024.0/1024.0,resetstr,(double)(n->physram-requestedram )/1024.0/1024.0);
+            printf("  %6.2fGB%s   %5.2fGB %s",((double)n->ramfree)/1024.0/1024.0,resetstr,(double)(n->physram-requestedram )/1024.0/1024.0, n->props);
             printf("\n");
         }
         else
@@ -157,7 +162,7 @@ void printuser(const user* u)
                 printf ("%s%i  %-10s  %4i   %4i  ",UserColourStr(i),i,u->name,u->runcount,u->queuecount);
                 int accum = printSomeJobs(u->jobs,R);
                 for (;accum<25;accum++) {printf(" ");} //fill in some white space
-                accum += printSomeJobs(u->jobs,Q);
+                printSomeJobs(u->jobs,Q);
                 printf("%s\n",resetstr);
             }
             u=u->next;
@@ -207,4 +212,50 @@ void printq(const job* j)
         }
     }
     free(queues);
+}
+typedef struct propinfo propinfo;
+struct propinfo 
+{
+    char* propname;
+    int* free;
+};
+void PropStats(const node* n)
+{
+    const int maxprops=10;
+    heading("NUMBER OF RUNNABLE JOBS");
+    propinfo* props = calloc(sizeof(propinfo),maxprops);
+    const char vbar=0x78;
+    int propcounter=0;
+    printf("%s%sCPU COUNT%s%s %s%c%s%3i ",underline,bold,resetstr,underline,boxon,vbar,boxoff,1);
+    for (int i=2;i<=MAXCPUS;i+=2) {printf("%3i ",i);}
+    printf("\n%s",resetstr);
+    const node* cn = n;
+    while (cn != NULL)
+    {
+        int found=0;
+        for (int i=0;i<propcounter;i++)
+        {   
+            if (!strcmp(cn->props,props[i].propname)) {found=1;break;printf("break");}
+        }
+        if (found==0) {props[propcounter].propname=cn->props;propcounter++;}
+        cn=cn->next;
+    }
+    for (int i=0;i<propcounter;i++)
+    {
+        props[i].free=calloc(sizeof(int),MAXCPUS/2 +1);
+        cn=n;
+        while (cn != NULL)
+        {
+            if (!strcmp(cn->props,props[i].propname))
+            {
+                int freecpus=cn->cores - cn->users_using_count;
+                props[i].free[0] += freecpus;
+                for (int j=2;j<=MAXCPUS;j+=2) {props[i].free[j/2]+= freecpus/j; }
+            }
+            cn=cn->next;
+        }
+        printf("%-10s%s%c%s",props[i].propname,boxon,vbar,boxoff);
+        for (int j=0;j<1+MAXCPUS/2;j++) {printf("%3i ",props[i].free[j]);}
+        printf("\n");
+    }
 }

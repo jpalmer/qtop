@@ -49,6 +49,10 @@ node* GetNodeInfo(const int connection)
             {
                 if (strstr(at->value,"down")!= NULL ) {cn->up=1;} else {cn->up=0;}
             }
+            if (!strcmp(at->name,"properties"))
+            {
+                cn->props=at->value;
+            }
             if (!strcmp(at->name,"status"))
             {
                 char* totmem = strstr(at->value,"totmem=")+7;
@@ -194,9 +198,26 @@ void coalescejobs (job* j) //explot the fact that jobs are returned in order - i
         j=j->next;
     }
 }
+
+void TestPBSFunc(const int connection)
+{
+    struct batch_status* bs = pbs_statnode(connection,NULL,NULL,NULL);
+    while (bs != NULL)
+    {
+        printf("%s %s\n",bs->name, bs-> text);
+        struct attrl* attr = bs-> attribs;
+        while (attr != NULL)
+        {
+            printf("    %s-%s-%s\n",attr->name,attr->value,attr->resource);
+            attr=attr->next;
+        }
+        bs=bs->next;
+    }
+}
 int main()
 {
-    int connection = pbs_connect("localhost");
+    const int connection = pbs_connect("localhost");
+  //  TestPBSFunc(connection);
     if (connection==-1) {printf("pbs error: %s\n",pbs_strerror(pbs_errno)); return EXIT_FAILURE;}
     user* users;
     node* n = GetNodeInfo(connection);
@@ -207,6 +228,6 @@ int main()
     printuser(users);
     printq(j);
     printmyjobs(users);
-    checkColour();
+    PropStats(n);
     return EXIT_SUCCESS;
 }

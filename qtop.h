@@ -3,6 +3,7 @@
 typedef struct node node;
 typedef struct job job;
 typedef struct user user;
+typedef struct Que Que;
 struct user
 {
     const char* name;
@@ -23,6 +24,7 @@ struct node
     job* users_using[MAXCPUS];
     int users_using_count;
     node* next;
+    char* props;
 };
 typedef enum  {Q, R,C} jobstate;
 struct job
@@ -35,6 +37,10 @@ struct job
     job* usernext;
     char * queue;
     long long int ramrequested;
+};
+struct Que
+{
+    char* name;
 };
 //not in .c file because it breaks syntax highlighting
 #define findN(x,namein) \
