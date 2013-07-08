@@ -13,8 +13,8 @@ const char* underline   =   "\x1b[4m";
 const char* resetstr    =   "\x1b[0m";
 const char* boxon       =   "\x1b(0";
 const char* boxoff      =   "\x1b(B";
-const char boxchars[]  =   {0x71,  0x74,       0x75,       0x6C,       0x6b};
-typedef enum               {dash,  leftedge,   rightedge,  topleft,    topright} boxenum;
+const char boxchars[]  =   {0x71,  0x74,       0x75,       0x6C,       0x6b,        0x6e,   0x77};
+typedef enum               {dash,  leftedge,   rightedge,  topleft,    topright,    cross,  downT} boxenum;
 char * me = NULL;
 void heading(const char* s) {printf("%s%s%s\n",bold,s,resetstr); }
 void checkColour()
@@ -79,7 +79,6 @@ void printnode(const node* n,const user* u)
     {
         int i=0;
         long long int requestedram=0L;
-        memset(curline,0,MAXCPUS);
         if (n->up==0)
         {
             printf("%s  %s%5.2f%s  ",n->name,n->loadave > (float)n->cores+1.5?Highlight:"",n->loadave,resetstr);
@@ -88,17 +87,18 @@ void printnode(const node* n,const user* u)
                 requestedram += n->users_using[i]->ramrequested;
                 int myuserno=UserNo(u,n->users_using[i]->owner);
                 printf ("%s%i%s",UserColourStr(myuserno),myuserno,resetstr);
+                curline[i]=0;
             }
             printf(boxon);
             if (i!=n->cores-1) 
             {
                 curline[i]=1;
                 prevline[i]==1?putchar(boxchars[leftedge]):putchar(boxchars[topleft]);i++;
-                for (;i<n->cores-1;i++) {putchar(boxchars[dash]);} //fill in blank cpu
+                for (;i<n->cores-1;i++) {prevline[i]==1?putchar(boxchars[cross]):putchar(boxchars[downT]);curline[i]=1;} //fill in blank cpu
                 curline[i]=1;
                 prevline[i]==1?putchar(boxchars[rightedge]):putchar(boxchars[topright]);i++;
             }
-            else {putchar(0x6e);}
+            else {putchar('X');}
             printf(boxoff);
             for (;i<MAXCPUS;i++) {putchar(' ');}
             if (n->ramfree<0) {printf("%s",Highlight);}
