@@ -7,9 +7,10 @@
 #include "print.h"
 void insertJobToUserJobList (user * u,job* j)
 {
+    printf("called\n");
     if (u->jobs==NULL) //special case for first job for a user
-        { u->jobs=j;}
-    else{ u->jobsend->usernext=j;}
+        { u->jobs=j;printf("test\n");}
+    else{ u->jobsend->usernext=j;printf("test2\n");}
     u->jobsend=j;
 }
 void AggregateUserInfo(user * u)
@@ -95,10 +96,9 @@ user* adduser (user* u,char* name)
 job* GetJobInfo(const int connection,node* n,user** u) //u is a second return value
 {
     struct batch_status* qstat=pbs_statjob(connection,NULL,NULL,NULL);
-    user* users=malloc(sizeof(user));
+    user* users=calloc(sizeof(user),1);
     *u=users;
-    users->name=NULL;//avoid accessing unint memory
-    job* ret = malloc(sizeof(job));
+    job* ret = calloc(sizeof(job),1);
     job* curjob=ret;
     while (qstat != NULL)
     {
@@ -170,6 +170,7 @@ job* GetJobInfo(const int connection,node* n,user** u) //u is a second return va
         }
         else {curjob -> next=NULL;}
     }
+    if (users->name==NULL) {*u=NULL;ret=NULL;} //no users found
     AggregateUserInfo(users);
     return ret;
 }

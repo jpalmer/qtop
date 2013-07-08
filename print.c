@@ -148,24 +148,27 @@ int printSomeJobs(const job* j, const jobstate s)
 }
 void printuser(const user* u)
 {
-    heading("USERS");
-    printf("N  Name         Run  Queue  Running jobs             Queued jobs\n");
-    const user* start=u;
-    const int count = UserCount(u);
-    for (int i=0;i<count;i++)
+    if (u != NULL)
     {
-        u=start;
-        while (u != NULL)
+        heading("USERS");
+        printf("N  Name         Run  Queue  Running jobs             Queued jobs\n");
+        const user* start=u;
+        const int count = UserCount(u);
+        for (int i=0;i<count;i++)
         {
-            if (UserNo(start,u)==i)
+            u=start;
+            while (u != NULL)
             {
-                printf ("%s%i  %-10s  %4i   %4i  ",UserColourStr(i),i,u->name,u->runcount,u->queuecount);
-                int accum = printSomeJobs(u->jobs,R);
-                for (;accum<25;accum++) {printf(" ");} //fill in some white space
-                printSomeJobs(u->jobs,Q);
-                printf("%s\n",resetstr);
+                if (UserNo(start,u)==i)
+                {
+                    printf ("%s%i  %-10s  %4i   %4i  ",UserColourStr(i),i,u->name,u->runcount,u->queuecount);
+                    int accum = printSomeJobs(u->jobs,R);
+                    for (;accum<25;accum++) {printf(" ");} //fill in some white space
+                    printSomeJobs(u->jobs,Q);
+                    printf("%s\n",resetstr);
+                }
+                u=u->next;
             }
-            u=u->next;
         }
     }
 }
