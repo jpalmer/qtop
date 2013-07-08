@@ -83,7 +83,15 @@ void printnode(const node* n,const user* u)
                 int myuserno=UserNo(u,n->users_using[i]->owner);
                 printf ("%s%i%s",UserColourStr(myuserno),myuserno,resetstr);
             }
-            for (;i<n->cores;i++) {putchar('-');} //fill in blank cpu
+            printf(boxon);
+            if (i!=n->cores-1) 
+            {
+                putchar(0x74);i++;
+                for (;i<n->cores-1;i++) {putchar(0x71);} //fill in blank cpu
+                putchar(0x75);
+            }
+            else {putchar(0x6e);}
+            printf(boxoff);
             for (;i<MAXCPUS;i++) {putchar(' ');}
             if (n->ramfree<0) {printf("%s",Highlight);}
             printf("  %6.2fGB%s   %5.2fGB",((double)n->ramfree)/1024.0/1024.0,resetstr,(double)(n->physram-requestedram )/1024.0/1024.0);
