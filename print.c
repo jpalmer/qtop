@@ -12,7 +12,9 @@ const char* bold        =   "\x1b[1m";
 const char* underline   =   "\x1b[4m";
 const char* resetstr    =   "\x1b[0m";
 const char* boxon       =   "\x1b(0";
-const char* boxoff       =  "\x1b(B";
+const char* boxoff      =   "\x1b(B";
+const char boxchars[]  =   {0x71,  0x74,       0x75,       0x6C,       0x6b};
+typedef enum               {dash,  leftedge,   rightedge,  topleft,    topright} boxenum;
 char * me = NULL;
 void heading(const char* s) {printf("%s%s%s\n",bold,s,resetstr); }
 void checkColour()
@@ -70,10 +72,14 @@ void printnode(const node* n,const user* u)
 {
     heading("NODES");
     printf("Name     Load  CPU            MemFree   MemRequestable\n");
+    int* prevline = calloc(sizeof(int),MAXCPUS);
+    int* curline = calloc(sizeof(int),MAXCPUS);
+    int first = 0;
     while (n != NULL)
     {
         int i=0;
         long long int requestedram=0L;
+        memset(curline,0,MAXCPUS);
         if (n->up==0)
         {
             printf("%s  %s%5.2f%s  ",n->name,n->loadave > (float)n->cores+1.5?Highlight:"",n->loadave,resetstr);
@@ -86,9 +92,11 @@ void printnode(const node* n,const user* u)
             printf(boxon);
             if (i!=n->cores-1) 
             {
-                putchar(0x74);i++;
-                for (;i<n->cores-1;i++) {putchar(0x71);} //fill in blank cpu
-                putchar(0x75);
+                curline[i]=1;
+                prevline[i]==1?putchar(boxchars[leftedge]):putchar(boxchars[topleft]);i++;
+                for (;i<n->cores-1;i++) {putchar(boxchars[dash]);} //fill in blank cpu
+                curline[i]=1;
+                prevline[i]==1?putchar(boxchars[rightedge]):putchar(boxchars[topright]);i++;
             }
             else {putchar(0x6e);}
             printf(boxoff);
@@ -102,6 +110,9 @@ void printnode(const node* n,const user* u)
             printf("%s%s  ERROR ERROR ERROR ERROR ERROR ERROR %s\n",Highlight,n->name,resetstr);
         }
         n=n->next;
+        int* temp=prevline;
+        prevline=curline;
+        curline=temp;
     }
 }
 void printmyjobs(const user* u)
