@@ -7,10 +7,9 @@
 #include "print.h"
 void insertJobToUserJobList (user * u,job* j)
 {
-    printf("called\n");
     if (u->jobs==NULL) //special case for first job for a user
-        { u->jobs=j;printf("test\n");}
-    else{ u->jobsend->usernext=j;printf("test2\n");}
+        { u->jobs=j;}
+    else{ u->jobsend->usernext=j;}
     u->jobsend=j;
 }
 void AggregateUserInfo(user * u)

@@ -90,7 +90,10 @@ void printnode(const node* n,const user* u)
                 curline[i]=0;
             }
             printf(boxon);
-            if (i!=n->cores-1) 
+            if(i==n->cores) {}
+            else if (i==n->cores-1)
+                {printf(boxon);putchar(0x78);printf(boxoff);curline[i]=1;}
+            else
             {
                 curline[i]=1;
                 prevline[i]==1?putchar(boxchars[leftedge]):putchar(boxchars[topleft]);i++;
@@ -98,7 +101,6 @@ void printnode(const node* n,const user* u)
                 curline[i]=1;
                 prevline[i]==1?putchar(boxchars[rightedge]):putchar(boxchars[topright]);i++;
             }
-            else {putchar('X');}
             printf(boxoff);
             for (;i<MAXCPUS;i++) {putchar(' ');}
             if (n->ramfree<0) {printf("%s",Highlight);}
