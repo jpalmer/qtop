@@ -99,13 +99,17 @@ void printnode(const node* n,const user* u)
             else
             {
                 curline[i]=1;
-                MakeGray(i,prevline[i]==1?(boxchars[leftedge]):(boxchars[topleft]));i++;
-                for (;i<n->cores-1;i++) { MakeGray(i,prevline[i]==1?(boxchars[upT]):(boxchars[dash]));curline[i]=0;} //fill in blank cpu
+                MakeGray(i,boxchars[leftedge]);i++;
+                for (;i<n->cores-1;i++) 
+                {
+                    if (n->next != NULL && n->next-> users_using_count == i && n->next->users_using_count != n->next->cores) {MakeGray(i,boxchars[downT]);curline[i]=1;}
+                    else{MakeGray(i,prevline[i]==1?(boxchars[upT]):(boxchars[dash]));curline[i]=0;}
+                } 
                 curline[i]=1;
-                MakeGray(i,prevline[i]==1?(boxchars[rightedge]):(boxchars[topright]));i++;
+                MakeGray(i,boxchars[rightedge]);i++;
             }
             printf(boxoff);
-            for (;i<MAXCPUS;i++) {putchar(' ');}
+            for (;i<MAXCPUS;i++) {putchar(' ');} //blanks
             if (n->ramfree<0) {printf("%s",Highlight);}
             printf("  %6.2fGB%s   %5.2fGB",((double)n->ramfree)/1024.0/1024.0,resetstr,(double)(n->physram-requestedram )/1024.0/1024.0);
             printf("\n");
