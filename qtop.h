@@ -37,6 +37,7 @@ struct job
     job* usernext;
     char * queue;
     long long int ramrequested;
+    int arrayid;
 };
 //not in .c file because it breaks syntax highlighting
 #define findN(x,namein) \

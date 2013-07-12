@@ -13,8 +13,9 @@ const char* underline   =   "\x1b[4m";
 const char* resetstr    =   "\x1b[0m";
 const char* boxon       =   "\x1b(0";
 const char* boxoff      =   "\x1b(B";
-const char boxchars[]  =   {0x71,  0x74,       0x75,       0x6C,       0x6b,        0x6e,   0x77};
-typedef enum               {dash,  leftedge,   rightedge,  topleft,    topright,    cross,  downT} boxenum;
+const char* gray        =   "\x1b[47m";
+const char boxchars[]  =   {0x71,  0x74,       0x75,       0x6C,       0x6b,        0x6e,   0x77,   0x76};
+typedef enum               {dash,  leftedge,   rightedge,  topleft,    topright,    cross,  downT,  upT} boxenum;
 char * me = NULL;
 void heading(const char* s) {printf("%s%s%s\n",bold,s,resetstr); }
 void checkColour()
@@ -68,6 +69,8 @@ int UserCount(const user* u)
     while(u != NULL) {ret++;u=u->next;}
     return ret;
 }
+void MakeGray(const int i,const char c) {if (!((i/3)%2) ) {printf("%s%c%s",gray,c,resetstr);}else {putchar(c);}}
+const char* MakeGray_(const int i) {if (!((i/3)%2) ) {return gray;} else {return "";}}
 void printnode(const node* n,const user* u)
 {
     heading("NODES");
@@ -86,20 +89,20 @@ void printnode(const node* n,const user* u)
             {
                 requestedram += n->users_using[i]->ramrequested;
                 int myuserno=UserNo(u,n->users_using[i]->owner);
-                printf ("%s%i%s",UserColourStr(myuserno),myuserno,resetstr);
+                printf ("%s%s%i%s",UserColourStr(myuserno),MakeGray_(i),myuserno,resetstr);
                 curline[i]=0;
             }
             printf(boxon);
             if(i==n->cores) {}
             else if (i==n->cores-1)
-                {printf(boxon);putchar(0x78);printf(boxoff);curline[i]=1;}
+                {printf(boxon);putchar(0x78);printf(boxoff);curline[i]=1;i++;}
             else
             {
                 curline[i]=1;
-                prevline[i]==1?putchar(boxchars[leftedge]):putchar(boxchars[topleft]);i++;
-                for (;i<n->cores-1;i++) {prevline[i]==1?putchar(boxchars[cross]):putchar(boxchars[downT]);curline[i]=1;} //fill in blank cpu
+                MakeGray(i,prevline[i]==1?(boxchars[leftedge]):(boxchars[topleft]));i++;
+                for (;i<n->cores-1;i++) { MakeGray(i,prevline[i]==1?(boxchars[upT]):(boxchars[dash]));curline[i]=0;} //fill in blank cpu
                 curline[i]=1;
-                prevline[i]==1?putchar(boxchars[rightedge]):putchar(boxchars[topright]);i++;
+                MakeGray(i,prevline[i]==1?(boxchars[rightedge]):(boxchars[topright]));i++;
             }
             printf(boxoff);
             for (;i<MAXCPUS;i++) {putchar(' ');}
@@ -136,7 +139,14 @@ void printmyjobs(const user* u)
                 if (j->state==Q) //if job queued then call showstart to print the start time for the job (based on reported runtimes, job likely to start even earlier than this
                 {
                     char* command = malloc(1024);
-                    sprintf(command,"showstart %i | grep start | tr -s ' ' | cut -d ' ' -f4",j->number); //get time to start
+                    if (j -> arrayid == -1)
+                    {
+                        sprintf(command,"showstart %i | grep start | tr -s ' ' | cut -d ' ' -f4",j->number); //get time to start
+                    }
+                    else
+                    {
+                        sprintf(command,"showstart %i-%i | grep start | tr -s ' ' | cut -d ' ' -f4",j->number,j->arrayid); //get time to start
+                    }
                     FILE* pout=popen(command,"r");
                     char* datebuffer = malloc(100);//100 characters should be enough
                     fgets(datebuffer,100,pout);

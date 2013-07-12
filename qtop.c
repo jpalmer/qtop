@@ -103,9 +103,17 @@ job* GetJobInfo(const int connection,node* n,user** u) //u is a second return va
     {
         memset(curjob,0,sizeof(job)); //all properties have a default 0 value and this avoids valgrind complaints
         curjob->number = atoi(qstat->name);
+        curjob->arrayid=-1;
         struct attrl* attribs=qstat->attribs;
         while (attribs != NULL)
         {
+            if (!strcmp(attribs->name,"job_array_id"))
+            {
+                if (attribs->value!= NULL)
+                {
+                    curjob->arrayid=atoi(attribs->value);
+                }
+            }
             if (!strcmp(attribs->name,"job_state"))
             {
                 if      ((*(attribs->value))=='Q') {curjob->state = Q;} 
@@ -201,7 +209,7 @@ void coalescejobs (job* j) //explot the fact that jobs are returned in order - i
 
 void TestPBSFunc(const int connection)
 {
-    struct batch_status* bs = pbs_statnode(connection,NULL,NULL,NULL);
+    struct batch_status* bs = pbs_statjob(connection,NULL,NULL,NULL);
     while (bs != NULL)
     {
         printf("%s %s\n",bs->name, bs-> text);
@@ -217,7 +225,7 @@ void TestPBSFunc(const int connection)
 int main()
 {
     const int connection = pbs_connect("localhost");
-  //  TestPBSFunc(connection);
+   // TestPBSFunc(connection);
     if (connection==-1) {printf("pbs error: %s\n",pbs_strerror(pbs_errno)); return EXIT_FAILURE;}
     user* users;
     node* n = GetNodeInfo(connection);
