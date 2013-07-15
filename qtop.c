@@ -116,10 +116,12 @@ job* GetJobInfo(const int connection,node* n,user** u) //u is a second return va
             }
             if (!strcmp(attribs->name,"job_state"))
             {
-                if      ((*(attribs->value))=='Q') {curjob->state = Q;} 
-                else if ((*(attribs->value))=='R') {curjob->state = R;}
-                else if ((*(attribs->value))=='C') {curjob->state = C;} //do nothing
-                else {printf ("unknown status %s",attribs->value);}
+                char c = *(attribs->value);
+                if      (c=='Q') {curjob->state = Q;} 
+                else if (c=='R') {curjob->state = R;}
+                else if (c=='C') {curjob->state = C;} 
+                else if (c=='S') {curjob->state = S; printf ("suspended");}
+                else {printf ("unknown status %s\n",attribs->value);}
             }
             if (!strcmp(attribs->name,"Resource_List")) 
             {
@@ -148,7 +150,7 @@ job* GetJobInfo(const int connection,node* n,user** u) //u is a second return va
             {
                 curjob->queue=attribs->value;
             }
-            if (!strcmp(attribs->name,"exec_host") && curjob -> state != C)
+            if (!strcmp(attribs->name,"exec_host") && curjob -> state != C && curjob -> state != S)
             {
                 //count the number of '/'
                 char * str = attribs->value;
@@ -162,6 +164,7 @@ job* GetJobInfo(const int connection,node* n,user** u) //u is a second return va
                     val[6]=0;
                     node* execnode=findN(n,val);
                     execnode->users_using[execnode->users_using_count++]=curjob;
+                    //printf ("%s %i\n",execnode->name,execnode->users_using_count);
                     i++;
                     val[6]=' ';
                     val++;

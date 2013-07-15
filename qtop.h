@@ -26,7 +26,7 @@ struct node
     node* next;
     char* props;
 };
-typedef enum  {Q, R,C} jobstate;
+typedef enum  {Q, R,C,S} jobstate;
 struct job
 {
     int number;

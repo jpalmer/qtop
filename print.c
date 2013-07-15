@@ -35,6 +35,7 @@ char StatStr (const job* j)
         case Q:return 'Q';
         case R:return 'R';
         case C:return 'C';
+        case S:return 'S';
         default:
             printf("error in state\n");
             return 'E';
@@ -102,14 +103,14 @@ void printnode(const node* n,const user* u)
                 MakeGray(i,boxchars[leftedge]);i++;
                 for (;i<n->cores-1;i++) 
                 {
-                    if (n->next != NULL && n->next-> users_using_count == i && n->next->users_using_count != n->next->cores) {MakeGray(i,boxchars[downT]);curline[i]=1;}
+                    if (n->next != NULL && (n->next-> users_using_count == i || n->next->cores==(i+1))) {MakeGray(i,boxchars[downT]);curline[i]=1;}
                     else{MakeGray(i,prevline[i]==1?(boxchars[upT]):(boxchars[dash]));curline[i]=0;}
                 } 
                 curline[i]=1;
                 MakeGray(i,boxchars[rightedge]);i++;
             }
             printf(boxoff);
-            for (;i<MAXCPUS;i++) {putchar(' ');} //blanks
+            for (;i<MAXCPUS;i++) {MakeGray(i,' ');} //blanks
             if (n->ramfree<0) {printf("%s",Highlight);}
             printf("  %6.2fGB%s   %5.2fGB",((double)n->ramfree)/1024.0/1024.0,resetstr,(double)(n->physram-requestedram )/1024.0/1024.0);
             printf("\n");
@@ -140,7 +141,7 @@ void printmyjobs(const user* u)
             while (j != NULL)
             {
                 printf("%i    %c %3i %5.2fGB",j->number,StatStr( j),j->corecount,(double)j->ramrequested/1024.0/1024.0);
-                if (j->state==Q) //if job queued then call showstart to print the start time for the job (based on reported runtimes, job likely to start even earlier than this
+                if (j->state==Q || j-> state==S) //if job queued then call showstart to print the start time for the job (based on reported runtimes, job likely to start even earlier than this
                 {
                     char* command = malloc(1024);
                     if (j -> arrayid == -1)
@@ -186,7 +187,7 @@ void printuser(const user* u)
     if (u != NULL)
     {
         heading("USERS");
-        printf("N  Name         Run  Queue  Running jobs             Queued jobs\n");
+        printf("N Name      Run    Q Running jobs          Queued jobs           Suspended jobs\n");
         const user* start=u;
         const int count = UserCount(u);
         for (int i=0;i<count;i++)
@@ -196,10 +197,12 @@ void printuser(const user* u)
             {
                 if (UserNo(start,u)==i)
                 {
-                    printf ("%s%i  %-10s  %4i   %4i  ",UserColourStr(i),i,u->name,u->runcount,u->queuecount);
+                    printf ("%s%i %-8s %4i %4i ",UserColourStr(i),i,u->name,u->runcount,u->queuecount);
                     int accum = printSomeJobs(u->jobs,R);
-                    for (;accum<25;accum++) {printf(" ");} //fill in some white space
-                    printSomeJobs(u->jobs,Q);
+                    for (;accum<22;accum++) {printf(" ");} //fill in some white space
+                    accum += printSomeJobs(u->jobs,Q);
+                    for (;accum<44;accum++) {printf(" ");} //fill in some white space
+                    printSomeJobs(u->jobs,S);
                     printf("%s\n",resetstr);
                 }
                 u=u->next;
