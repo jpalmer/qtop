@@ -103,7 +103,8 @@ void printnode(const node* n,const user* u)
                 MakeGray(i,boxchars[leftedge]);i++;
                 for (;i<n->cores-1;i++) 
                 {
-                    if (n->next != NULL && (n->next-> users_using_count == i || n->next->cores==(i+1))) {MakeGray(i,boxchars[downT]);curline[i]=1;}
+                    if (n->next != NULL && ((n->next-> users_using_count == i && n->next->cores!=i ) || (i==n->next->cores-1 && n->next->users_using_count<i))) 
+                        {MakeGray(i,boxchars[downT]);curline[i]=1;}
                     else{MakeGray(i,prevline[i]==1?(boxchars[upT]):(boxchars[dash]));curline[i]=0;}
                 } 
                 curline[i]=1;
