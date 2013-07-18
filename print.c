@@ -7,7 +7,7 @@
 #include "print.h"
 //globals
 const char* colours[7]  =   {"\x1B[41m", "\x1b[42m", "\x1b[43m", "\x1b[44m", "\x1b[45m", "\x1b[46m",""};
-const char* basecols[]  =   {"\x1b[42m","\x1b[44m","\x1b[44m"};
+const char* basecols[]  =   {"\x1b[32m","\x1b[34m","\x1b[34m"};
 const char* Highlight   =   "\x1b[31m";
 const char* bold        =   "\x1b[1m";
 const char* underline   =   "\x1b[4m";
@@ -95,7 +95,7 @@ int UserCount(const user* u)
 
 void printnode(const node* n,const user* u)
 {
-    heading_("Name    Load Usage   Mem: Free avail | Name    Load Usage   Mem: Free avail     ");
+    heading_("Name    Load Usage   Mem: Free avail  | Name    Load Usage   Mem: Free avail     ");
     int count = 0;
     propinfo* props;
     int propcount=GetPropinfo(n,&props);
@@ -104,8 +104,16 @@ void printnode(const node* n,const user* u)
         long long int requestedram=0L;
         if (n->up==0)
         {
-            
-            printf("%s %s%5.2f%s ",n->name,n->loadave > (float)n->cores+1.5?Highlight:"",n->loadave,resetstr);
+            const char* nodecol = resetstr;
+            for (int i=0;i<propcount;i++)
+            {
+                if (!strcmp(n->props,props[i].propname))
+                    {
+                    nodecol=basecols[i];
+                    }
+            }
+
+            printf("%s%s%s %s%5.2f%s ",nodecol,n->name,resetstr,n->loadave > (float)n->cores+1.5?Highlight:"",n->loadave,resetstr);
             printf(boxon);
             int i=0;
             for (;i<n->cores;i++)
@@ -288,8 +296,8 @@ void PropStats(const node* n)
             }
             cn=cn->next;
         }
-        printf("%-10s |",props[i].propname);
+        printf("%s%-10s |",basecols[i],props[i].propname);
         for (int j=0;j<1+MAXCPUS/2;j++) {printf("%3i ",props[i].free[j]);}
-        printf("\n");
+        printf("%s\n",resetstr);
     }
 }
