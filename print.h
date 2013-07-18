@@ -14,3 +14,9 @@ typedef struct
     const job * nextjob;
     const char** nodenames;
 } qstats;
+typedef struct propinfo propinfo;
+struct propinfo 
+{
+    char* propname;
+    int* free;
+};

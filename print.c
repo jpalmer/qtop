@@ -6,17 +6,18 @@
 #include <stdlib.h> //malloc
 #include "print.h"
 //globals
-const char* colours[7]  =   {"\x1B[31m", "\x1b[32m", "\x1b[33m", "\x1b[34m", "\x1b[35m", "\x1b[36m",""};
-const char* Highlight   =   "\x1b[41m\x1b[32m";
+const char* colours[7]  =   {"\x1B[41m", "\x1b[42m", "\x1b[43m", "\x1b[44m", "\x1b[45m", "\x1b[46m",""};
+const char* basecols[]  =   {"\x1b[42m","\x1b[44m","\x1b[44m"};
+const char* Highlight   =   "\x1b[31m";
 const char* bold        =   "\x1b[1m";
 const char* underline   =   "\x1b[4m";
 const char* resetstr    =   "\x1b[0m";
 const char* boxon       =   "\x1b(0";
 const char* boxoff      =   "\x1b(B";
 const char* gray        =   "\x1b[100m";
-const char boxchars[]   =   {0x71,  0x74,       0x75,       0x6C,       0x6b,        0x6e,   0x77,   0x76};
+const char boxchars[]   =   {0x71,  0x74,       0x75       };
+typedef enum               {dash,  leftedge,   rightedge  } boxenum;
 const char* headingfmt  =   "\x1b[1;97m\x1b[100m\x1b[4m";
-typedef enum               {dash,  leftedge,   rightedge,  topleft,    topright,    cross,  downT,  upT} boxenum;
 char * me = NULL;
 void heading_(const char* s) {printf("%s%s%s\n",headingfmt,s,resetstr); }
 void checkColour()
@@ -42,19 +43,38 @@ char StatStr (const job* j)
             return 'E';
     }
 }
+int GetPropinfo(const node* n,propinfo** p)
+{
+    const int maxprops=10;
+    propinfo* props = calloc(sizeof(propinfo),maxprops);
+    int propcounter=0;
+    const node* cn = n;
+    while (cn != NULL)
+    {
+        int found=0;
+        for (int i=0;i<propcounter;i++)
+        {   
+            if (!strcmp(cn->props,props[i].propname)) {found=1;break;printf("break");}
+        }
+        if (found==0) {props[propcounter].propname=cn->props;propcounter++;}
+        cn=cn->next;
+    }
+    *p=props;
+    return propcounter;
+
+}
 int UserNo (const user* u,const user* cu) //algorithm for allocating numbers is currently n^2 - could make it better with sorting, but typically number of users is small, so current method is simpler
 {
     if (me == NULL) { me = getlogin();}
     if (!(strcmp(cu->name,me))) {return 0;}
     const user* start = u;
-    while (u != cu) {u=u->next;}
     int i=0;
-    int mycount=u->runcount + u ->queuecount;
+    int mycount=cu->runcount + cu ->queuecount;
     while (start != NULL) 
     {
         int scount=start->runcount + start -> queuecount;
         if (        scount>mycount //more cores that the other
-                ||  (scount==mycount && (strcmp(start->name,u->name)>0)) //or alphabetical if cores tied
+                ||  (scount==mycount && (strcmp(start->name,cu->name)>0)) //or alphabetical if cores tied
                 ||  (!(strcmp(start->name,me)))) //I go first
         {i++;} //complex ordering based on number of queued jobs and running jobs then alphabetical
         start=start->next;
@@ -72,43 +92,37 @@ int UserCount(const user* u)
     return ret;
 }
 
+
 void printnode(const node* n,const user* u)
 {
-    heading_("Name    Load Usage   Mem: Free avail | Name    Load Usage   Mem: Free avail");
-    int* prevline = calloc(sizeof(int),MAXCPUS);
-    int* curline = calloc(sizeof(int),MAXCPUS);
+    heading_("Name    Load Usage   Mem: Free avail | Name    Load Usage   Mem: Free avail     ");
     int count = 0;
+    propinfo* props;
+    int propcount=GetPropinfo(n,&props);
     while (n != NULL)
     {
-        int i=0;
         long long int requestedram=0L;
         if (n->up==0)
         {
+            
             printf("%s %s%5.2f%s ",n->name,n->loadave > (float)n->cores+1.5?Highlight:"",n->loadave,resetstr);
-            for (;i<n->users_using_count;i++)
-            {
-                requestedram += n->users_using[i]->ramrequested;
-                int myuserno=UserNo(u,n->users_using[i]->owner);
-                printf ("%s%i%s",UserColourStr(myuserno),myuserno,resetstr);
-                curline[i]=0;
-            }
             printf(boxon);
-            if(i==n->cores) {}
-            else if (i==n->cores-1)
-                {printf(boxon);putchar(0x78);printf(boxoff);curline[i]=1;i++;}
-            else
+            int i=0;
+            for (;i<n->cores;i++)
             {
-                curline[i]=1;
-                putchar(boxchars[leftedge]);i++;
-                for (;i<n->cores-1;i++) 
+                const char* colorstr = resetstr;
+                if (i< n-> users_using_count)
                 {
-                    if (n->next != NULL && n->next->next!=NULL&& ((n->next->next-> users_using_count == i && n->next->next->cores!=i ) || (i==n->next->next->cores-1 && n->next->next->users_using_count<i))) 
-                        {putchar(boxchars[downT]);curline[i]=1;}
-                    else{putchar(prevline[i]==1?(boxchars[upT]):(boxchars[dash]));curline[i]=0;}
-                } 
-                curline[i]=1;
-                putchar(boxchars[rightedge]);i++;
+                    requestedram += n->users_using[i]->ramrequested;
+                    int myuserno=UserNo(u,n->users_using[i]->owner);
+                    colorstr = UserColourStr(myuserno);
+                }
+                if (i==0)       {printf ("%s%c",colorstr,boxchars[leftedge]);}
+                if (i==n->cores-1){printf ("%s%c",colorstr,boxchars[rightedge]);}
+                else            {printf ("%s%c",colorstr,boxchars[dash]);}
+
             }
+            printf("%s",resetstr);
             printf(boxoff);
             for (;i<MAXCPUS;i++) {putchar(' ');} //blanks
             if (n->ramfree<0) {printf("%s",Highlight);}
@@ -121,9 +135,6 @@ void printnode(const node* n,const user* u)
         count++;
         if (count%2==0) {printf("\n");}else {printf(" | ");}
         n=n->next;
-        int* temp=prevline;
-        prevline=curline;
-        curline=temp;
     }
 }
 void printmyjobs(const user* u)
@@ -136,7 +147,7 @@ void printmyjobs(const user* u)
             const job * j=u->jobs;
             if (j != NULL)
             {
-                heading_("Job No     |state CPU  RAM     STARTING IN");
+                heading_("Job No     |state CPU  RAM     STARTING IN                                      ");
             }
             while (j != NULL)
             {
@@ -196,12 +207,13 @@ void printuser(const user* u)
             {
                 if (UserNo(start,u)==i)
                 {
-                    printf ("%s%i %-8s%s |%s%4i %4i ",UserColourStr(i),i,u->name,resetstr,UserColourStr(i),u->runcount,u->queuecount);
+                    printf ("%s%i %-8s |%4i %4i ",UserColourStr(i),i,u->name,u->runcount,u->queuecount);
                     int accum = printSomeJobs(u->jobs,R);
                     for (;accum<22;accum++) {printf(" ");} //fill in some white space
                     accum += printSomeJobs(u->jobs,Q);
                     for (;accum<44;accum++) {printf(" ");} //fill in some white space
                     printSomeJobs(u->jobs,S);
+                    for (;accum<58;accum++) {printf(" ");} //fill in some white space
                     printf("%s\n",resetstr);
                 }
                 u=u->next;
@@ -252,32 +264,16 @@ void printq(const job* j)
     }
     free(queues);
 }
-typedef struct propinfo propinfo;
-struct propinfo 
-{
-    char* propname;
-    int* free;
-};
+
+
 void PropStats(const node* n)
 {
-    const int maxprops=10;
-    propinfo* props = calloc(sizeof(propinfo),maxprops);
-    const char vbar=0x78;
-    int propcounter=0;
     printf("%sCPU Avail  |  %i ",headingfmt,1);
     for (int i=2;i<=MAXCPUS;i+=2) {printf("%3i ",i);}
-    printf("%s\n",resetstr);
-    const node* cn = n;
-    while (cn != NULL)
-    {
-        int found=0;
-        for (int i=0;i<propcounter;i++)
-        {   
-            if (!strcmp(cn->props,props[i].propname)) {found=1;break;printf("break");}
-        }
-        if (found==0) {props[propcounter].propname=cn->props;propcounter++;}
-        cn=cn->next;
-    }
+    printf("                                        %s\n",resetstr);
+    propinfo* props;
+    int propcounter=GetPropinfo(n,&props);
+    const node* cn=n;
     for (int i=0;i<propcounter;i++)
     {
         props[i].free=calloc(sizeof(int),MAXCPUS/2 +1);
