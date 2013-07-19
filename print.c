@@ -4,6 +4,7 @@
 #include <stdio.h> //printf
 #include <time.h>  //maketime
 #include <stdlib.h> //malloc
+#include <termcap.h> //columns
 #include "print.h"
 //globals
 const char* colours[7]  =   {"\x1B[41m", "\x1b[42m", "\x1b[43m", "\x1b[44m", "\x1b[45m", "\x1b[46m",""};
@@ -15,11 +16,12 @@ const char* resetstr    =   "\x1b[0m";
 const char* boxon       =   "\x1b(0";
 const char* boxoff      =   "\x1b(B";
 const char* gray        =   "\x1b[100m";
-const char boxchars[]   =   {0x71,  0x74,       0x75       };
+char boxchars[]   =   {0x71,  0x74,       0x75       };
 typedef enum               {dash,  leftedge,   rightedge  } boxenum;
 const char* headingfmt  =   "\x1b[1;97m\x1b[100m\x1b[4m";
 char * me = NULL;
 void heading_(const char* s) {printf("%s%s%s\n",headingfmt,s,resetstr); }
+void heading_n(const char* s) {printf("%s%s%s",headingfmt,s,resetstr); }
 void checkColour()
 {
    if(!isatty(fileno(stdout)))
@@ -28,6 +30,13 @@ void checkColour()
         resetstr="";
         underline="";
         for (int i=0;i<6;i++) {colours[i]="";}
+        for (int i=0;i<3;i++) {basecols[i]="";}
+        bold="";
+        boxon="";
+        boxoff="";
+        gray="";
+        boxchars[0]='-';boxchars[1]='|';boxchars[2]='|';
+        headingfmt="";
    }
 }
 char StatStr (const job* j)
@@ -65,7 +74,7 @@ int GetPropinfo(const node* n,propinfo** p)
 }
 int UserNo (const user* u,const user* cu) //algorithm for allocating numbers is currently n^2 - could make it better with sorting, but typically number of users is small, so current method is simpler
 {
-    if (me == NULL) { me = getlogin();}
+    if (me == NULL) { me = getenv("LOGNAME");}
     if (!(strcmp(cu->name,me))) {return 0;}
     const user* start = u;
     int i=0;
@@ -92,10 +101,14 @@ int UserCount(const user* u)
     return ret;
 }
 
-
+static char termbuf [2048];
 void printnode(const node* n,const user* u)
 {
-    heading_("Name    Load Usage   Mem: Free avail  | Name    Load Usage   Mem: Free avail     ");
+    tgetent(termbuf,getenv("TERM"));
+    int width=tgetnum("co")/ 36;
+    heading_n("Name    Load Usage   Mem: Free avail ");
+    for (int k=1;k<width;k++){heading_n("| Name    Load Usage   Mem: Free avail ");}
+    printf("\n");
     int count = 0;
     propinfo* props;
     int propcount=GetPropinfo(n,&props);
@@ -126,7 +139,7 @@ void printnode(const node* n,const user* u)
                     colorstr = UserColourStr(myuserno);
                 }
                 if (i==0)       {printf ("%s%c",colorstr,boxchars[leftedge]);}
-                if (i==n->cores-1){printf ("%s%c",colorstr,boxchars[rightedge]);}
+                else if (i==n->cores-1){printf ("%s%c",colorstr,boxchars[rightedge]);}
                 else            {printf ("%s%c",colorstr,boxchars[dash]);}
 
             }
@@ -141,13 +154,12 @@ void printnode(const node* n,const user* u)
             printf("%s%s  ERROR ERROR ERROR ERROR ERROR ERROR %s",Highlight,n->name,resetstr);
         }
         count++;
-        if (count%2==0) {printf("\n");}else {printf(" | ");}
+        if (count%width==0) {printf("\n");}else {printf(" | ");}
         n=n->next;
     }
 }
 void printmyjobs(const user* u)
 {
-    char * me = getlogin();
     while (u != NULL)
     {
         if (!strcmp(me,u->name))
