@@ -112,10 +112,12 @@ int UserCount(const user* u)
 
 void printnode(const node* n,const user* u)
 {
-    int width=(twidth< 40)?1:(twidth-36)/40 + 1;
+    const char* First = "Name    Load Usage   Mem: Free avail ";
+    const char* others= "| Name    Load Usage   Mem: Free avail ";
+    int width=(twidth< strlen(First))?1:(twidth-strlen(First))/strlen(others) + 1; //magic numbers related to lengths of strings below.  
     int sum = 0;
-    sum += heading_n("Name    Load Usage   Mem: Free avail ");
-    for (int k=1;k<width;k++){sum += heading_n("| Name    Load Usage   Mem: Free avail ");}
+    sum += heading_n(First);
+    for (int k=1;k<width;k++){sum += heading_n(others);}
     for (;sum<twidth;sum++) {heading_n(" ");}
     printf("\n");
     int count = 0;
