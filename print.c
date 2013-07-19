@@ -16,13 +16,17 @@ const char* resetstr    =   "\x1b[0m";
 const char* boxon       =   "\x1b(0";
 const char* boxoff      =   "\x1b(B";
 const char* gray        =   "\x1b[100m";
-char boxchars[]   =   {0x71,  0x74,       0x75       };
-typedef enum               {dash,  leftedge,   rightedge  } boxenum;
-const char* headingfmt  =   "\x1b[1;97m\x1b[100m\x1b[4m";
+char boxchars[]         =   {0x71,  0x74,       0x75       };
+typedef enum                {dash,  leftedge,   rightedge  } boxenum;
+const char * headingfmt =   "\x1b[1;97m\x1b[100m\x1b[4m";
 char * me = NULL;
+int twidth = 1;
 void heading_(const char* s) {printf("%s%s%s\n",headingfmt,s,resetstr); }
-void heading_n(const char* s) {printf("%s%s%s",headingfmt,s,resetstr); }
-void checkColour()
+int  heading_nr(const char* s) {return  printf("%s%s",headingfmt,s) - strlen(headingfmt); }
+int  heading_n(const char* s) {int r = heading_nr(s);printf(resetstr);return r;}
+void heading_fill(const char* s) {for (int c = heading_nr(s);c<twidth;c++){putchar(' ');}printf(resetstr);}
+static char termbuf [2048];
+void SetupTerm()
 {
    if(!isatty(fileno(stdout)))
    {
@@ -37,6 +41,11 @@ void checkColour()
         gray="";
         boxchars[0]='-';boxchars[1]='|';boxchars[2]='|';
         headingfmt="";
+   }
+   else
+   {
+        tgetent(termbuf,getenv("TERM"));
+        twidth=tgetnum("co");
    }
 }
 char StatStr (const job* j)
@@ -101,13 +110,13 @@ int UserCount(const user* u)
     return ret;
 }
 
-static char termbuf [2048];
 void printnode(const node* n,const user* u)
 {
-    tgetent(termbuf,getenv("TERM"));
-    int width=tgetnum("co")/ 36;
-    heading_n("Name    Load Usage   Mem: Free avail ");
-    for (int k=1;k<width;k++){heading_n("| Name    Load Usage   Mem: Free avail ");}
+    int width=(twidth< 40)?1:(twidth-36)/40 + 1;
+    int sum = 0;
+    sum += heading_n("Name    Load Usage   Mem: Free avail ");
+    for (int k=1;k<width;k++){sum += heading_n("| Name    Load Usage   Mem: Free avail ");}
+    for (;sum<twidth;sum++) {heading_n(" ");}
     printf("\n");
     int count = 0;
     propinfo* props;
@@ -157,6 +166,7 @@ void printnode(const node* n,const user* u)
         if (count%width==0) {printf("\n");}else {printf(" | ");}
         n=n->next;
     }
+    if (count % width != 0) {printf("\n");}
 }
 void printmyjobs(const user* u)
 {
@@ -167,7 +177,7 @@ void printmyjobs(const user* u)
             const job * j=u->jobs;
             if (j != NULL)
             {
-                heading_("Job No     |state CPU  RAM     STARTING IN                                      ");
+                heading_fill("Job No     |state CPU  RAM     STARTING IN");
             }
             while (j != NULL)
             {
@@ -217,7 +227,7 @@ void printuser(const user* u)
 {
     if (u != NULL)
     {
-        heading_("N Name     | Run    Q Running jobs          Queued jobs           Suspended jobs");
+        heading_fill("N Name     | Run    Q Running jobs          Queued jobs           Suspended jobs");
         const user* start=u;
         const int count = UserCount(u);
         for (int i=0;i<count;i++)
@@ -272,7 +282,7 @@ void printq(const job* j)
     }
     if (foundqcount != 0)
     {
-        heading_("Queue Name | Q Length     Q Ram  NextJob: ID        USER CPU         RAM");
+        heading_fill("Queue Name | Q Length     Q Ram  NextJob: ID        USER CPU         RAM");
         for (int i=0;i<foundqcount;i++)
         {
             const qstats q = queues[i];
@@ -288,9 +298,10 @@ void printq(const job* j)
 
 void PropStats(const node* n)
 {
-    printf("%sCPU Avail  |  %i ",headingfmt,1);
-    for (int i=2;i<=MAXCPUS;i+=2) {printf("%3i ",i);}
-    printf("                                        %s\n",resetstr);
+    int c = heading_nr("CPU Avail  |  1 ");
+    for (int i=2;i<=MAXCPUS;i+=2) {c+=printf("%3i ",i); }
+    for (;c<twidth;c++) {putchar(' ');}
+    printf("%s\n",resetstr);
     propinfo* props;
     int propcounter=GetPropinfo(n,&props);
     const node* cn=n;

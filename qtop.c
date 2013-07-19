@@ -233,7 +233,7 @@ int main()
     user* users;
     node* n = GetNodeInfo(connection);
     job* j = GetJobInfo(connection,n,&users);
-    checkColour();
+    SetupTerm();
     printnode(n,users);
     coalescejobs(j); //so that when jobs are printed it looks nice
     printuser(users);
