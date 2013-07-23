@@ -114,7 +114,7 @@ void printnode(const node* n,const user* u)
 {
     const char* First = "Name    Load Usage   Mem: Free avail ";
     const char* others= "| Name    Load Usage   Mem: Free avail ";
-    int width=(twidth< strlen(First))?1:(twidth-strlen(First))/strlen(others) + 1; //magic numbers related to lengths of strings below.  
+    int width=(twidth< (int)strlen(First))?1:(twidth-strlen(First))/strlen(others) + 1; //magic numbers related to lengths of strings below.  
     int sum = 0;
     sum += heading_n(First);
     for (int k=1;k<width;k++){sum += heading_n(others);}
@@ -239,13 +239,13 @@ void printuser(const user* u)
             {
                 if (UserNo(start,u)==i)
                 {
-                    printf ("%s%i %-8s |%4i %4i ",UserColourStr(i),i,u->name,u->runcount,u->queuecount);
+                    int initial = printf ("%s%i %-8s |%4i %4i ",UserColourStr(i),i,u->name,u->runcount,u->queuecount) - strlen(UserColourStr(i));
                     int accum = printSomeJobs(u->jobs,R);
                     for (;accum<22;accum++) {printf(" ");} //fill in some white space
                     accum += printSomeJobs(u->jobs,Q);
                     for (;accum<44;accum++) {printf(" ");} //fill in some white space
                     printSomeJobs(u->jobs,S);
-                    for (;accum<58;accum++) {printf(" ");} //fill in some white space
+                    for (;accum<(twidth-initial);accum++) {printf(" ");} //fill in some white space
                     printf("%s\n",resetstr);
                 }
                 u=u->next;
