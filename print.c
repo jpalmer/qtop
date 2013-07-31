@@ -213,7 +213,7 @@ int printSomeJobs(const job* j, const jobstate s)
 {
     int i = 0;
     int accum=0;
-    while(i<2 && j != NULL) //print the first 2 running jobs
+    while(i<2 && j != NULL) //print the first 2 jobs in some state
     {
        if (j->state==s)
         {
