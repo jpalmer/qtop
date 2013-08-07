@@ -5,6 +5,7 @@
 #include <time.h>  //maketime
 #include <stdlib.h> //malloc
 #include <termcap.h> //columns
+#include <math.h>    //ceil
 #include "print.h"
 //globals
 const char* colours[7]  =   {"\x1B[41m", "\x1b[42m", "\x1b[43m", "\x1b[44m", "\x1b[45m", "\x1b[46m",""};
@@ -115,60 +116,78 @@ void printnode(const node* n,const user* u)
     const char* First = "Name    Load Usage   Mem: Free avail ";
     const char* others= "| Name    Load Usage   Mem: Free avail ";
     int width=(twidth< (int)strlen(First))?1:(twidth-strlen(First))/strlen(others) + 1; //magic numbers related to lengths of strings below.  
-    int sum = 0;
-    sum += heading_n(First);
+    int sum = heading_n(First);
     for (int k=1;k<width;k++){sum += heading_n(others);}
     for (;sum<twidth;sum++) {heading_n(" ");}
     printf("\n");
-    int count = 0;
     propinfo* props;
-    int propcount=GetPropinfo(n,&props);
-    while (n != NULL)
+    int propcount=GetPropinfo(n,&props); 
+    const node** nodes  = calloc(sizeof(node*),width+1); //to gurantee that nodes[1] exists
+    int nodecount = 0;
+    const node* dummy = n;
+    while (dummy != NULL) {dummy=dummy->next;nodecount++;}
+    dummy=n;
+    int c = 0;
+    int nodecount_r=((int)floor((float)nodecount/(float)width))*width; //so divisibility tests work
+    while (dummy != NULL) //set up first element in each column
     {
+        int num = c*(width);
+        if ((num/nodecount_r)*nodecount_r==num) 
+            {nodes[num/nodecount_r]=dummy;/*printf("assigning %s\n",dummy->name);*/} 
+        dummy= dummy-> next;
+//        printf("%i,%i\n",num,(num/nodecount_r)*nodecount_r);
+        c++;
+    }
+    int colindex=0;
+    int printed = 0;
+    while (printed != nodecount)
+    {
+        const node* cn = nodes[colindex];
         long long int requestedram=0L;
-        if (n->up==0)
+        if (cn->up==0)
         {
             const char* nodecol = resetstr;
             for (int i=0;i<propcount;i++)
             {
-                if (!strcmp(n->props,props[i].propname))
+                if (!strcmp(cn->props,props[i].propname))
                     {
                     nodecol=basecols[i];
                     }
             }
 
-            printf("%s%s%s %s%5.2f%s ",nodecol,n->name,resetstr,n->loadave > (float)n->cores+1.5?Highlight:"",n->loadave,resetstr);
+            printf("%s%s%s %s%5.2f%s ",nodecol,cn->name,resetstr,cn->loadave > (float)cn->cores+1.5?Highlight:"",cn->loadave,resetstr);
             printf(boxon);
             int i=0;
-            for (;i<n->cores;i++)
+            for (;i<cn->cores;i++)
             {
                 const char* colorstr = resetstr;
-                if (i< n-> users_using_count)
+                if (i< cn-> users_using_count)
                 {
-                    requestedram += n->users_using[i]->ramrequested;
-                    int myuserno=UserNo(u,n->users_using[i]->owner);
+                    requestedram += cn->users_using[i]->ramrequested;
+                    int myuserno=UserNo(u,cn->users_using[i]->owner);
                     colorstr = UserColourStr(myuserno);
                 }
                 if (i==0)       {printf ("%s%c",colorstr,boxchars[leftedge]);}
-                else if (i==n->cores-1){printf ("%s%c",colorstr,boxchars[rightedge]);}
+                else if (i==cn->cores-1){printf ("%s%c",colorstr,boxchars[rightedge]);}
                 else            {printf ("%s%c",colorstr,boxchars[dash]);}
 
             }
             printf("%s",resetstr);
             printf(boxoff);
             for (;i<MAXCPUS;i++) {putchar(' ');} //blanks
-            if (n->ramfree<0) {printf("%s",Highlight);}
-            printf(" %2.0fGB%s  %2.0fGB",((double)n->ramfree)/1024.0/1024.0,resetstr,(double)(n->physram-requestedram )/1024.0/1024.0);
+            if (cn->ramfree<0) {printf("%s",Highlight);}
+            printf(" %2.0fGB%s  %2.0fGB",((double)cn->ramfree)/1024.0/1024.0,resetstr,(double)(cn->physram-requestedram )/1024.0/1024.0);
         }
         else
         {
-            printf("%s%s  ERROR ERROR ERROR ERROR ERROR ERROR %s",Highlight,n->name,resetstr);
+            printf("%s%s  ERROR ERROR ERROR ERROR ERROR ERROR %s",Highlight,cn->name,resetstr);
         }
-        count++;
-        if (count%width==0) {printf("\n");}else {printf(" | ");}
-        n=n->next;
+        nodes[colindex]=nodes[colindex]-> next;
+        if (colindex+1==width) {printf("\n");colindex=0;}else {printf(" | ");colindex++;} //either print a serperator or a newline
+        printed++;
+        
     }
-    if (count % width != 0) {printf("\n");}
+    if (colindex != 0 ) {printf("\n");} //if we didn't end with a newline print a newline
 }
 void printmyjobs(const user* u)
 {
