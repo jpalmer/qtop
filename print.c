@@ -7,6 +7,15 @@
 #include <termcap.h> //columns
 #include <math.h>    //ceil
 #include "print.h"
+#define max(a,b) \
+    ({ typeof (a) _a = (a);\
+       typeof (b) _b = (b); \
+        _a>_b?_a:_b;})
+#define min(a,b) \
+    ({ typeof (a) _a = (a);\
+       typeof (b) _b = (b); \
+        _a<_b?_a:_b;})
+
 //globals
 const char* colours[7]  =   {"\x1B[41m", "\x1b[42m", "\x1b[43m", "\x1b[44m", "\x1b[45m", "\x1b[46m",""};
 const char* basecols[]  =   {"\x1b[32m","\x1b[34m","\x1b[34m"};
@@ -128,14 +137,16 @@ void printnode(const node* n,const user* u)
     while (dummy != NULL) {dummy=dummy->next;nodecount++;}
     dummy=n;
     int c = 0;
-    int nodecount_r=((int)floor((float)nodecount/(float)width))*width; //so divisibility tests work
+    int nodecount_r=((int)ceil((float)nodecount/(float)width)) ; //so divisibility tests work
+    int excesscount = nodecount % width;
+    if (nodecount_r/width<nodecount/width) {nodecount_r=nodecount/width ;}
+    nodes[0]=n;
     while (dummy != NULL) //set up first element in each column
     {
-        int num = c*(width);
-        if ((num/nodecount_r)*nodecount_r==num) 
-            {nodes[num/nodecount_r]=dummy;/*printf("assigning %s\n",dummy->name);*/} 
+        int offset=min(excesscount,c/nodecount_r);
+        if (((c-offset)/nodecount_r)*nodecount_r==(c-offset)) 
+            {nodes[(c-offset)/nodecount_r]=dummy;}
         dummy= dummy-> next;
-//        printf("%i,%i\n",num,(num/nodecount_r)*nodecount_r);
         c++;
     }
     int colindex=0;
