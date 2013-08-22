@@ -225,7 +225,7 @@ void TestPBSFunc(const int connection)
         bs=bs->next;
     }
 }
-int main()
+int main(int argc,char** argv)
 {
     const int connection = pbs_connect("localhost");
    // TestPBSFunc(connection);

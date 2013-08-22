@@ -7,18 +7,12 @@
 #include <termcap.h> //columns
 #include <math.h>    //ceil
 #include "print.h"
-#define max(a,b) \
-    ({ typeof (a) _a = (a);\
-       typeof (b) _b = (b); \
-        _a>_b?_a:_b;})
-#define min(a,b) \
-    ({ typeof (a) _a = (a);\
-       typeof (b) _b = (b); \
-        _a<_b?_a:_b;})
+
 
 //globals
 const char* colours[7]  =   {"\x1B[41m", "\x1b[42m", "\x1b[43m", "\x1b[44m", "\x1b[45m", "\x1b[46m",""};
-const char* basecols[]  =   {"\x1b[32m","\x1b[34m","\x1b[34m"};
+const char* fgcolours[7]=   {"\x1B[31m", "\x1b[32m", "\x1b[33m", "\x1b[34m", "\x1b[35m", "\x1b[36m",""};
+const char* basecols[]  =   {"\x1b[32m","\x1b[34m","\x1b[31m"};
 const char* Highlight   =   "\x1b[31m";
 const char* bold        =   "\x1b[1m";
 const char* underline   =   "\x1b[4m";
@@ -26,6 +20,7 @@ const char* resetstr    =   "\x1b[0m";
 const char* boxon       =   "\x1b(0";
 const char* boxoff      =   "\x1b(B";
 const char* gray        =   "\x1b[100m";
+const char* black        =  "\x1b[40m";
 char boxchars[]         =   {0x71,  0x74,       0x75       };
 typedef enum                {dash,  leftedge,   rightedge  } boxenum;
 const char * headingfmt =   "\x1b[1;97m\x1b[100m\x1b[4m";
@@ -49,6 +44,7 @@ void SetupTerm()
         boxon="";
         boxoff="";
         gray="";
+        black="";
         boxchars[0]='-';boxchars[1]='|';boxchars[2]='|';
         headingfmt="";
    }
@@ -109,9 +105,16 @@ int UserNo (const user* u,const user* cu) //algorithm for allocating numbers is 
     }
     return i;
 }
-const char* UserColourStr(const int userno)
+const char* UserColourStr(const int userno,const int fg)
 {
-    if (userno>5) {return colours[6];} else {return colours[userno];}
+    if (fg==0)
+    {
+        if (userno>5) {return fgcolours[6];} else {return fgcolours[userno];}
+    }
+    else
+    {
+        if (userno>5) {return colours[6];} else {return colours[userno];}
+    }
 }
 int UserCount(const user* u)
 {
@@ -122,8 +125,8 @@ int UserCount(const user* u)
 
 void printnode(const node* n,const user* u)
 {
-    const char* First = "Name    Load Usage   Mem: Free avail ";
-    const char* others= "| Name    Load Usage   Mem: Free avail ";
+    const char* First = "Name    Load Usage              ";
+    const char* others= "| Name    Load Usage              ";
     int width=(twidth< (int)strlen(First))?1:(twidth-strlen(First))/strlen(others) + 1; //magic numbers related to lengths of strings below.  
     int sum = heading_n(First);
     for (int k=1;k<width;k++){sum += heading_n(others);}
@@ -154,7 +157,6 @@ void printnode(const node* n,const user* u)
     while (printed != nodecount)
     {
         const node* cn = nodes[colindex];
-        long long int requestedram=0L;
         if (cn->up==0)
         {
             const char* nodecol = resetstr;
@@ -168,30 +170,33 @@ void printnode(const node* n,const user* u)
 
             printf("%s%s%s %s%5.2f%s ",nodecol,cn->name,resetstr,cn->loadave > (float)cn->cores+1.5?Highlight:"",cn->loadave,resetstr);
             printf(boxon);
+            putchar(boxchars[leftedge]);
             int i=0;
             for (;i<cn->cores;i++)
             {
                 const char* colorstr = resetstr;
+                char entry = boxchars[dash];
                 if (i< cn-> users_using_count)
                 {
-                    requestedram += cn->users_using[i]->ramrequested;
                     int myuserno=UserNo(u,cn->users_using[i]->owner);
-                    colorstr = UserColourStr(myuserno);
+                    colorstr = UserColourStr(myuserno,0);
+                    entry='X';
                 }
-                if (i==0)       {printf ("%s%c",colorstr,boxchars[leftedge]);}
-                else if (i==cn->cores-1){printf ("%s%c",colorstr,boxchars[rightedge]);}
-                else            {printf ("%s%c",colorstr,boxchars[dash]);}
-
+                const char* bg = "";
+                if (cn->ramfree < 0) {bg=black;}
+                else if ((cn->physram-cn ->ramfree) * (cn->cores - i) > cn->physram) {bg=gray;}
+                printf ("%s%s%c",colorstr,bg,entry);
             }
             printf("%s",resetstr);
+            putchar(boxchars[rightedge]);
             printf(boxoff);
             for (;i<MAXCPUS;i++) {putchar(' ');} //blanks
-            if (cn->ramfree<0) {printf("%s",Highlight);}
-            printf(" %2.0fGB%s  %2.0fGB",((double)cn->ramfree)/1024.0/1024.0,resetstr,(double)(cn->physram-requestedram )/1024.0/1024.0);
+         //   if (cn->ramfree<0) {printf("%s",Highlight);}
+         //   printf(" %2.0fGB%s  %2.0fGB",((double)cn->ramfree)/1024.0/1024.0,resetstr,(double)(cn->physram-requestedram )/1024.0/1024.0);
         }
         else
         {
-            printf("%s%s  ERROR ERROR ERROR ERROR ERROR ERROR %s",Highlight,cn->name,resetstr);
+            printf("%s%s  ERROR ERROR ERROR %s",Highlight,cn->name,resetstr);
         }
         nodes[colindex]=nodes[colindex]-> next;
         if (colindex+1==width) {printf("\n");colindex=0;}else {printf(" | ");colindex++;} //either print a serperator or a newline
@@ -269,7 +274,7 @@ void printuser(const user* u)
             {
                 if (UserNo(start,u)==i)
                 {
-                    int initial = printf ("%s%i %-8s |%4i %4i ",UserColourStr(i),i,u->name,u->runcount,u->queuecount) - strlen(UserColourStr(i));
+                    int initial = printf ("%s%i %-8s |%4i %4i ",UserColourStr(i,1),i,u->name,u->runcount,u->queuecount) - strlen(UserColourStr(i,1));
                     int accum = printSomeJobs(u->jobs,R);
                     for (;accum<22;accum++) {printf(" ");} //fill in some white space
                     accum += printSomeJobs(u->jobs,Q);
