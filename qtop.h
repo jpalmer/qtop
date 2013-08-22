@@ -39,6 +39,7 @@ struct job
     long long int ramrequested;
     int arrayid;
 };
+extern char* filternodes;
 //not in .c file because it breaks syntax highlighting
 #define findN(x,namein) \
        ({ typeof (x) t=x;\

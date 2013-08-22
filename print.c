@@ -137,7 +137,10 @@ void printnode(const node* n,const user* u)
     const node** nodes  = calloc(sizeof(node*),width+1); //to gurantee that nodes[1] exists
     int nodecount = 0;
     const node* dummy = n;
-    while (dummy != NULL) {dummy=dummy->next;nodecount++;}
+    while (dummy != NULL) {
+        nodecount++;
+        dummy=dummy->next;
+        }
     dummy=n;
     int c = 0;
     int nodecount_r=((int)ceil((float)nodecount/(float)width)) ; //so divisibility tests work
@@ -163,11 +166,10 @@ void printnode(const node* n,const user* u)
             for (int i=0;i<propcount;i++)
             {
                 if (!strcmp(cn->props,props[i].propname))
-                    {
+                {
                     nodecol=basecols[i];
-                    }
+                }
             }
-
             printf("%s%s%s %s%5.2f%s ",nodecol,cn->name,resetstr,cn->loadave > (float)cn->cores+1.5?Highlight:"",cn->loadave,resetstr);
             printf(boxon);
             putchar(boxchars[leftedge]);
@@ -196,7 +198,7 @@ void printnode(const node* n,const user* u)
         }
         else
         {
-            printf("%s%s  ERROR ERROR ERROR %s",Highlight,cn->name,resetstr);
+            printf("%s%s  ERROR ERROR ERROR      %s",Highlight,cn->name,resetstr);
         }
         nodes[colindex]=nodes[colindex]-> next;
         if (colindex+1==width) {printf("\n");colindex=0;}else {printf(" | ");colindex++;} //either print a serperator or a newline

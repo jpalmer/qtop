@@ -3,6 +3,7 @@
 #include <string.h> //strchr
 #include <stdlib.h> //malloc
 #include <stdio.h> //printf
+#include <getopt.h> //long opts
 #include "qtop.h"
 #include "print.h"
 void insertJobToUserJobList (user * u,job* j)
@@ -34,6 +35,7 @@ node* GetNodeInfo(const int connection)
     struct batch_status* pbsnodes = pbs_statnode(connection,"",(struct attrl *)NULL,"");
     node* n=malloc(sizeof(node));
     node* cn=n;
+    node* pn=n;
     while (pbsnodes != NULL)
     {
         cn->name = pbsnodes->name;
@@ -68,9 +70,14 @@ node* GetNodeInfo(const int connection)
         }
         pbsnodes=pbsnodes->next;
         if (pbsnodes != NULL)
-        {
-            cn->next=malloc(sizeof(node));
-            cn=cn->next;
+        {        
+            if (filternodes==NULL || strcmp(cn->props,filternodes)==0)
+            {
+                cn->next=malloc(sizeof(node));
+                pn=cn;
+                cn=cn->next;
+            }
+            else {pn->next=NULL;}
         } else {cn->next=NULL;}
     }
     return n;
@@ -163,7 +170,7 @@ job* GetJobInfo(const int connection,node* n,user** u) //u is a second return va
                     val=strchr(val,'n');
                     val[6]=0;
                     node* execnode=findN(n,val);
-                    execnode->users_using[execnode->users_using_count++]=curjob;
+                    if (execnode != NULL) {execnode->users_using[execnode->users_using_count++]=curjob;}
                     //printf ("%s %i\n",execnode->name,execnode->users_using_count);
                     i++;
                     val[6]=' ';
@@ -225,8 +232,35 @@ void TestPBSFunc(const int connection)
         bs=bs->next;
     }
 }
+char* filternodes=NULL;
+struct option long_options[]= {{"help",no_argument,0,'h'},{"filter",required_argument,0,'f'},{0,0,0,0}};
 int main(int argc,char** argv)
 {
+    int c;
+    while (1)
+    {
+        int option_index=0;
+        c=getopt_long(argc,argv,"hf:",long_options,&option_index);
+        if (c== -1) {break;}
+        switch (c)
+        {
+            case 'h':
+                printf(    "      qtop prints information about the usage of a PBS based cluster. "
+                        "\n\n      First nodes are printed with theior load averages.  Xs are drawn in a colour corresponding to the user who requested a core on a node.  A grey bar shows the ram usage.  This bar is in black when swap is in use."
+                        "\n\n      Next, information about each user is printed (running / queued jobs etc."
+                        "\n\n      Then, information about your jobs is printed."
+                        "\n\n      Finally, the number of runnable jobs for each subcluster is reported according to how many CPUs you need"
+                        "\n\n      options:"
+                        "\n          --help print this string"
+                        "\n          --filter ARG filter nodes to just a specific type (i.e. medphys/complex/cmt)"
+                        "\n\n      Any questions, contact John Palmer (j.palmer@physics.usyd.edu.au)\n");
+                exit(EXIT_SUCCESS);
+            case 'f':
+                filternodes=optarg;
+                break;
+                
+        }
+    }
     const int connection = pbs_connect("localhost");
    // TestPBSFunc(connection);
     if (connection==-1) {printf("pbs error: %s\n",pbs_strerror(pbs_errno)); return EXIT_FAILURE;}
