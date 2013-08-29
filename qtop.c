@@ -143,6 +143,13 @@ job* GetJobInfo(const int connection,node* n,user** u) //u is a second return va
                 {
                     curjob->ramrequested=strtoll(attribs->value,NULL,10)*1024L;//everyone should request in MB
                 }
+            } 
+            if (!strcmp(attribs->name,"Walltime")) 
+            {
+                if (!strcmp(attribs->resource,"remaining"))
+                {   //TODO: this does not quite accurately get seconds remaining
+                    curjob->secondsremaining=atoi(attribs->value)*10;
+                }
             }
             if (!strcmp(attribs->name,"Job_Owner"))
             {

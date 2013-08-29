@@ -92,14 +92,13 @@ int UserNo (const user* u,const user* cu) //algorithm for allocating numbers is 
     if (me == NULL) { me = getenv("LOGNAME");}
     if (!(strcmp(cu->name,me))) {return 0;}
     const user* start = u;
-    int i=0;
+    int i=1; //me always gets user 0
     int mycount=cu->runcount + cu ->queuecount;
     while (start != NULL) 
     {
         int scount=start->runcount + start -> queuecount;
         if (        scount>mycount //more cores that the other
-                ||  (scount==mycount && (strcmp(start->name,cu->name)>0)) //or alphabetical if cores tied
-                ||  (!(strcmp(start->name,me)))) //I go first
+                ||  (scount==mycount && (strcmp(start->name,cu->name)>0))) //or alphabetical if cores tied
         {i++;} //complex ordering based on number of queued jobs and running jobs then alphabetical
         start=start->next;
     }
@@ -186,15 +185,13 @@ void printnode(const node* n,const user* u)
                 }
                 const char* bg = "";
                 if (cn->ramfree < 0) {bg=black;}
-                else if ((cn->physram-cn ->ramfree) * (cn->cores - i) > cn->physram) {bg=gray;}
-                printf ("%s%s%c",colorstr,bg,entry);
+                else if (((float)(cn->physram -cn->ramfree))/ ((float)cn->physram) > ((float)(i+1))/((float)cn->cores) ) {bg=gray;}
+                printf ("%s%s%c%s",colorstr,bg,entry,resetstr);
             }
             printf("%s",resetstr);
             putchar(boxchars[rightedge]);
             printf(boxoff);
             for (;i<MAXCPUS;i++) {putchar(' ');} //blanks
-         //   if (cn->ramfree<0) {printf("%s",Highlight);}
-         //   printf(" %2.0fGB%s  %2.0fGB",((double)cn->ramfree)/1024.0/1024.0,resetstr,(double)(cn->physram-requestedram )/1024.0/1024.0);
         }
         else
         {

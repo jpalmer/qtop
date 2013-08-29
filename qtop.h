@@ -35,6 +35,7 @@ struct job
     user* owner;
     job* next;
     job* usernext;
+    int secondsremaining;
     char * queue;
     long long int ramrequested;
     int arrayid;
