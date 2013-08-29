@@ -98,8 +98,8 @@ int UserNo (const user* u,const user* cu) //algorithm for allocating numbers is 
     {
         int scount=start->runcount + start -> queuecount;
         if (        scount>mycount //more cores that the other
-                ||  (scount==mycount && (strcmp(start->name,cu->name)>0))) //or alphabetical if cores tied
-        {i++;} //complex ordering based on number of queued jobs and running jobs then alphabetical
+                ||  (scount==mycount && (strcmp(start->name,cu->name)>0)))                //or alphabetical if cores tied
+        {if (strcmp(start->name,me)) {i++;}} //complex ordering based on number of queued jobs and running jobs then alphabetical
         start=start->next;
     }
     return i;
@@ -117,8 +117,8 @@ const char* UserColourStr(const int userno,const int fg)
 }
 int UserCount(const user* u)
 {
-    int ret = 0;
-    while(u != NULL) {ret++;u=u->next;}
+    int ret = 1;
+    while(u != NULL) {if (strcmp(u->name,me)){ret++;}u=u->next;}
     return ret;
 }
 
