@@ -127,7 +127,7 @@ job* GetJobInfo(const int connection,node* n,user** u) //u is a second return va
                 if      (c=='Q') {curjob->state = Q;} 
                 else if (c=='R') {curjob->state = R;}
                 else if (c=='C') {curjob->state = C;} 
-                else if (c=='S') {curjob->state = S; printf ("suspended");}
+                else if (c=='S') {curjob->state = S;}
                 else {printf ("unknown status %s\n",attribs->value);}
             }
             if (!strcmp(attribs->name,"Resource_List")) 
