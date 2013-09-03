@@ -1,6 +1,7 @@
 //functions
 void printnode      (const node*,const user*);
 void printuser      (const user* );
+void printMyJobCount(const user* );
 void printq         (const job*);
 void printmyjobs    (const user* u);
 void PropStats      (const node* n);

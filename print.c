@@ -287,6 +287,28 @@ void printuser(const user* u)
         }
     }
 }
+void printMyJobCount(const user* u)
+{
+    if (u != NULL)
+    {
+        const user* start = u;
+        while(u != NULL && UserNo(start,u) != 0)
+        {
+            u =u->next;
+        }
+        if (u != NULL)
+        {
+            int jcount = 0;
+            const job* j  = u -> jobs;
+            while(j != NULL) {if(j->state != C){jcount+=j->corecount;}j=j->usernext;}
+            printf("%i",jcount);
+        }
+        else
+        {
+            printf("0");
+        }
+    }
+}
 void printq(const job* j)
 {
     int foundqcount=0;
