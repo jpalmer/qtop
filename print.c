@@ -278,7 +278,7 @@ void printuser(const user* u)
                     for (;accum<22;accum++) {printf(" ");} //fill in some white space
                     accum += printSomeJobs(u->jobs,Q);
                     for (;accum<44;accum++) {printf(" ");} //fill in some white space
-                    printSomeJobs(u->jobs,S);
+                    accum += printSomeJobs(u->jobs,S);
                     for (;accum<(twidth-initial);accum++) {printf(" ");} //fill in some white space
                     printf("%s\n",resetstr);
                 }
