@@ -117,6 +117,7 @@ const char* UserColourStr(const int userno,const int fg)
 }
 int UserCount(const user* u)
 {
+    if (me == NULL) { me = getenv("LOGNAME");}
     int ret = 1;
     while(u != NULL) {if (strcmp(u->name,me)){ret++;}u=u->next;}
     return ret;
