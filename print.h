@@ -5,6 +5,7 @@ void printMyJobCount(const user* );
 void printq         (const job*);
 void printmyjobs    (const user* u);
 void PropStats      (const node* n);
+void  FreeCpu        (const node* n);
 void SetupTerm      ();
 //structs
 typedef struct

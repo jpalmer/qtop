@@ -49,7 +49,7 @@ node* GetNodeInfo(const int connection)
             }
             if (!strcmp(at->name,"state"))
             {
-                if (strstr(at->value,"down")!= NULL ) {cn->up=1;} else {cn->up=0;}
+                if (strstr(at->value,"down")!= NULL  || strstr(at->value,"offline")!= NULL) {cn->up=1;} else {cn->up=0;}
             }
             if (!strcmp(at->name,"properties"))
             {
@@ -240,8 +240,9 @@ void TestPBSFunc(const int connection)
     }
 }
 char* filternodes=NULL;
+int showfree=0;
 int brief = 0;
-struct option long_options[]= {{"help",no_argument,0,'h'},{"filter",required_argument,0,'f'},{"brief",no_argument,0,'b'},{0,0,0,0}};
+struct option long_options[]= {{"help",no_argument,0,'h'},{"filter",required_argument,0,'f'},{"brief",no_argument,0,'b'},{"free",required_argument,0,'F'},{0,0,0,0}};
 int main(int argc,char** argv)
 {
     int c;
@@ -261,11 +262,16 @@ int main(int argc,char** argv)
                         "\n\n      options:"
                         "\n          --help print this string"
                         "\n          --filter ARG filter nodes to just a specific type (i.e. medphys/complex/cmt)"
+                        "\n          --free ARG print free core count for a specific type (i.e. medphys/complex/cmt)"
                         "\n          -b show my total running + queued jobs"
                         "\n\n      Any questions, contact John Palmer (j.palmer@physics.usyd.edu.au)\n");
                 exit(EXIT_SUCCESS);
             case 'f':
                 filternodes=optarg;
+                break;
+            case 'F':
+                filternodes=optarg;
+                showfree=1;
                 break;
             case 'b':
                 brief=1;
@@ -280,7 +286,7 @@ int main(int argc,char** argv)
     job* j = GetJobInfo(connection,n,&users);
     SetupTerm();
     if (brief==1) {coalescejobs(j); printMyJobCount(users);return EXIT_SUCCESS;}
-
+    if (showfree==1) {FreeCpu(n);return EXIT_SUCCESS;}
     printnode(n,users);
     coalescejobs(j); //so that when jobs are printed it looks nice
     printuser(users);

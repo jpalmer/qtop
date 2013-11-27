@@ -232,7 +232,7 @@ void printmyjobs(const user* u)
                     }
                     FILE* pout=popen(command,"r");
                     char* datebuffer = malloc(100);//100 characters should be enough
-                    fgets(datebuffer,100,pout);
+                    fgets(datebuffer,100,pout); //TODO: the strchr on the next line might return null - need tto check
                     strchr(datebuffer,'\n')[0]=0; //cut adds an extra newline - annoying
                     printf("  %11s\n",datebuffer);
                     free(command);free(datebuffer);
@@ -381,5 +381,27 @@ void PropStats(const node* n)
         printf("%s%-10s |",basecols[i],props[i].propname);
         for (int j=0;j<1+MAXCPUS/2;j++) {printf("%3i ",props[i].free[j]);}
         printf("%s\n",resetstr);
+    }
+}
+void FreeCpu(const node* n)
+{
+    propinfo* props;
+    int propcounter=GetPropinfo(n,&props);
+    const node* cn=n;
+    for (int i=0;i<propcounter;i++)
+    {
+        props[i].free=calloc(sizeof(int),MAXCPUS/2 +1);
+        cn=n;
+        while (cn != NULL)
+        {
+            if (!strcmp(cn->props,props[i].propname))
+            {
+                int freecpus=cn->cores - cn->users_using_count;
+                props[i].free[0] += freecpus;
+                for (int j=2;j<=MAXCPUS;j+=2) {props[i].free[j/2]+= freecpus/j; }
+            }
+            cn=cn->next;
+        }
+        printf("%i",props[i].free[0]);
     }
 }
