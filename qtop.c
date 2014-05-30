@@ -4,6 +4,8 @@
 #include <stdlib.h> //malloc
 #include <stdio.h> //printf
 #include <getopt.h> //long opts
+#include <sys/types.h> //for types for getpwnam
+#include <pwd.h>        //getpwnam
 #include "qtop.h"
 #include "print.h"
 void insertJobToUserJobList (user * u,job* j)
@@ -91,7 +93,11 @@ user* adduser (user* u,char* name)
         u->next=malloc(sizeof(user));
         u=u->next;
     }
+    struct passwd* pdata = getpwnam(name);
     u->name=name;
+    char* buf = malloc(sizeof(char)*20);
+    strcpy(buf,pdata->pw_gecos);
+    u->realname=buf;
     u->jobs=NULL;
     u->jobsend=NULL;
     u->runcount=0;

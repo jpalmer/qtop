@@ -257,14 +257,14 @@ int printSomeJobs(const job* j, const jobstate s)
         }
         j=j->usernext;
     }
-    while (j != NULL) {if (j->state==s) {accum += printf ("...");break;}j=j->next;}
+    while (j != NULL) {if (j->state==s) {accum += printf ("..");break;}j=j->next;}
     return accum;
 }
 void printuser(const user* u)
 {
     if (u != NULL)
     {
-        heading_fill("N Name     | Run    Q Running jobs          Queued jobs           Suspended jobs");
+        heading_fill("Name         | Run    Q Running jobs          Queued jobs           Suspended jobs");
         const user* start=u;
         const int count = UserCount(u);
         for (int i=0;i<count;i++)
@@ -274,7 +274,7 @@ void printuser(const user* u)
             {
                 if (UserNo(start,u)==i)
                 {
-                    int initial = printf ("%s%i %-8s |%4i %4i ",UserColourStr(i,1),i,u->name,u->runcount,u->queuecount) - strlen(UserColourStr(i,1));
+                    int initial = printf ("%s%-13s|%4i %4i ",UserColourStr(i,1),u->realname,u->runcount,u->queuecount) - strlen(UserColourStr(i,1));
                     int accum = printSomeJobs(u->jobs,R);
                     for (;accum<22;accum++) {printf(" ");} //fill in some white space
                     accum += printSomeJobs(u->jobs,Q);
@@ -313,7 +313,7 @@ void printMyJobCount(const user* u)
 void printq(const job* j)
 {
     int foundqcount=0;
-    qstats * queues = malloc (sizeof(qstats*)* MAX_QUEUES);
+    qstats * queues = malloc (sizeof(qstats)* MAX_QUEUES);
     while (j != NULL)
     {
         if (j->state==Q)

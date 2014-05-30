@@ -7,6 +7,7 @@ typedef struct Que Que;
 struct user
 {
     const char* name;
+    const char* realname;
     const job* jobs;
     job* jobsend;
     int runcount;
