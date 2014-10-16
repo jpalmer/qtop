@@ -1,11 +1,11 @@
-#include "qtop.h" //examples of functions needed are incomplete
+#include <sys/ioctl.h>
 #include <unistd.h> //getlogin
 #include <string.h> //strcmp
 #include <stdio.h> //printf
 #include <time.h>  //maketime
 #include <stdlib.h> //malloc
-#include <termcap.h> //columns
 #include <math.h>    //ceil
+#include "qtop.h" //examples of functions needed are incomplete
 #include "print.h"
 
 
@@ -30,11 +30,10 @@ void heading_(const char* s) {printf("%s%s%s\n",headingfmt,s,resetstr); }
 int  heading_nr(const char* s) {return  printf("%s%s",headingfmt,s) - strlen(headingfmt); }
 int  heading_n(const char* s) {int r = heading_nr(s);printf(resetstr);return r;}
 void heading_fill(const char* s) {for (int c = heading_nr(s);c<twidth;c++){putchar(' ');}printf(resetstr);}
-static char termbuf [2048];
 void SetupTerm()
 {
-   if(!isatty(fileno(stdout)))
-   {
+    if(!isatty(fileno(stdout)))
+    {
         Highlight="";
         resetstr="";
         underline="";
@@ -47,12 +46,13 @@ void SetupTerm()
         black="";
         boxchars[0]='-';boxchars[1]='|';boxchars[2]='|';
         headingfmt="";
-   }
-   else
-   {
-        tgetent(termbuf,getenv("TERM"));
-        twidth=tgetnum("co");
-   }
+    }
+    else
+    {
+        struct winsize w;
+        ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+        twidth=w.ws_col;
+    }
 }
 char StatStr (const job* j)
 {
@@ -63,8 +63,8 @@ char StatStr (const job* j)
         case C:return 'C';
         case S:return 'S';
         default:
-            printf("error in state\n");
-            return 'E';
+               printf("error in state\n");
+               return 'E';
     }
 }
 int GetPropinfo(const node* n,propinfo** p)
@@ -77,8 +77,8 @@ int GetPropinfo(const node* n,propinfo** p)
     {
         int found=0;
         for (int i=0;i<propcounter;i++)
-        {   
-            if (!strcmp(cn->props,props[i].propname)) {found=1;break;printf("break");}
+        {
+            if (!strcmp(cn->props,props[i].propname)) {found=1;break;}
         }
         if (found==0) {props[propcounter].propname=cn->props;propcounter++;}
         cn=cn->next;
@@ -94,7 +94,7 @@ int UserNo (const user* u,const user* cu) //algorithm for allocating numbers is 
     const user* start = u;
     int i=1; //me always gets user 0
     int mycount=cu->runcount + cu ->queuecount;
-    while (start != NULL) 
+    while (start != NULL)
     {
         int scount=start->runcount + start -> queuecount;
         if (        scount>mycount //more cores that the other
@@ -127,13 +127,13 @@ void printnode(const node* n,const user* u)
 {
     const char* First = "Name    Load Usage              ";
     const char* others= "| Name    Load Usage              ";
-    int width=(twidth< (int)strlen(First))?1:(twidth-strlen(First))/strlen(others) + 1; //magic numbers related to lengths of strings below.  
+    int width=(twidth< (int)strlen(First))?1:(twidth-strlen(First))/strlen(others) + 1; //magic numbers related to lengths of strings below.
     int sum = heading_n(First);
     for (int k=1;k<width;k++){sum += heading_n(others);}
     for (;sum<twidth;sum++) {heading_n(" ");}
     printf("\n");
     propinfo* props;
-    int propcount=GetPropinfo(n,&props); 
+    int propcount=GetPropinfo(n,&props);
     const node** nodes  = calloc(sizeof(node*),width+1); //to gurantee that nodes[1] exists
     int nodecount = 0;
     const node* dummy = n;
@@ -150,7 +150,7 @@ void printnode(const node* n,const user* u)
     while (dummy != NULL) //set up first element in each column
     {
         int offset=min(excesscount,c/nodecount_r);
-        if (((c-offset)/nodecount_r)*nodecount_r==(c-offset)) 
+        if (((c-offset)/nodecount_r)*nodecount_r==(c-offset))
             {nodes[(c-offset)/nodecount_r]=dummy;}
         dummy= dummy-> next;
         c++;
@@ -201,7 +201,7 @@ void printnode(const node* n,const user* u)
         nodes[colindex]=nodes[colindex]-> next;
         if (colindex+1==width) {printf("\n");colindex=0;}else {printf(" | ");colindex++;} //either print a serperator or a newline
         printed++;
-        
+
     }
     if (colindex != 0 ) {printf("\n");} //if we didn't end with a newline print a newline
 }
@@ -231,11 +231,23 @@ void printmyjobs(const user* u)
                         sprintf(command,"showstart %i-%i | grep start | tr -s ' ' | cut -d ' ' -f4",j->number,j->arrayid); //get time to start
                     }
                     FILE* pout=popen(command,"r");
-                    char* datebuffer = malloc(100);//100 characters should be enough
-                    fgets(datebuffer,100,pout); //TODO: the strchr on the next line might return null - need tto check
-                    strchr(datebuffer,'\n')[0]=0; //cut adds an extra newline - annoying
-                    printf("  %11s\n",datebuffer);
-                    free(command);free(datebuffer);
+                    if (pout)
+                    {
+                        char* datebuffer = malloc(100);//100 characters should be enough
+                        char * s = fgets(datebuffer,100,pout); //TODO: the strchr on the next line might return null - need tto check
+                        if (s)
+                        {
+                            strchr(datebuffer,'\n')[0]=0; //cut adds an extra newline - annoying
+                            printf("  %11s\n",datebuffer);
+                        }
+                        else
+                        {
+                            printf("error with showstart\n");
+                        }
+                        free(datebuffer);
+                    }
+                    else {printf("unable to run showstart");}
+                    free(command);
                 }
                 else {printf("\n");}
             j=j->usernext;
