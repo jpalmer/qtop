@@ -123,14 +123,53 @@ int UserCount(const user* u)
     return ret;
 }
 
+void actuallyprintnode (const node* const cn,const int propcount, const propinfo* const props,const user* const u)
+{
+    if (cn->up==0)
+    {
+        const char* nodecol = resetstr;
+        for (int i=0;i<propcount;i++)
+        {
+            if (!strcmp(cn->props,props[i].propname))
+            {
+                nodecol=basecols[i];
+            }
+        }
+        printf("%s%s%s %s%5.2f%s ",nodecol,cn->name,resetstr,cn->loadave > (float)cn->cores+1.5?Highlight:"",cn->loadave,resetstr);
+        printf(boxon);
+        putchar(boxchars[leftedge]);
+        int i=0;
+        for (;i<cn->cores;i++)
+        {
+            const char* colorstr = resetstr;
+            char entry = boxchars[dash];
+            if (i< cn-> users_using_count)
+            {
+                int myuserno=UserNo(u,cn->users_using[i]->owner);
+                colorstr = UserColourStr(myuserno,0);
+                entry='X';
+            }
+            const char* bg = "";
+            if (cn->ramfree < 0) {bg=black;}
+            else if (((float)(cn->physram -cn->ramfree))/ ((float)cn->physram) > ((float)(i+1))/((float)cn->cores) ) {bg=gray;}
+            printf ("%s%s%c%s",colorstr,bg,entry,resetstr);
+        }
+        printf("%s",resetstr);
+        putchar(boxchars[rightedge]);
+        printf(boxoff);
+        for (;i<MINMAXCPUS;i++) {putchar(' ');} //blanks
+    }
+    else
+    {
+        printf("%s%s  ERROR ERROR ERROR      %s",Highlight,cn->name,resetstr);
+    }
+}
 void printnode(const node* n,const user* u)
 {
-    const char* First = "Name    Load Usage              ";
-    const char* others= "| Name    Load Usage              ";
+    const char* First = "Name    Load Usage          ";
+    const char* others = "Name    Load Usage          ";
     int width=(twidth< (int)strlen(First))?1:(twidth-strlen(First))/strlen(others) + 1; //magic numbers related to lengths of strings below.
-    int sum = heading_n(First);
-    for (int k=1;k<width;k++){sum += heading_n(others);}
-    for (;sum<twidth;sum++) {heading_n(" ");}
+    heading_fill(First);
     printf("\n");
     propinfo* props;
     int propcount=GetPropinfo(n,&props);
@@ -138,7 +177,7 @@ void printnode(const node* n,const user* u)
     int nodecount = 0;
     const node* dummy = n;
     while (dummy != NULL) {
-        nodecount++;
+        if (dummy->cores <= MINMAXCPUS) {nodecount++;}
         dummy=dummy->next;
         }
     dummy=n;
@@ -157,49 +196,23 @@ void printnode(const node* n,const user* u)
     }
     int colindex=0;
     int printed = 0;
+    node* bign=nodes[0];
+    do     
+    {
+        if (bign->cores > MINMAXCPUS) {actuallyprintnode(bign,propcount,props,u);printf("\n");}
+        bign=bign->next;
+    } while (bign != NULL);
+    int sum = heading_n(First);
+    for (int k=1;k<width;k++){sum += heading_n(others);}
+    for (;sum<twidth;sum++) {heading_n(" ");}
+    printf("\n");
     while (printed != nodecount)
     {
         const node* cn = nodes[colindex];
-        if (cn->up==0)
-        {
-            const char* nodecol = resetstr;
-            for (int i=0;i<propcount;i++)
-            {
-                if (!strcmp(cn->props,props[i].propname))
-                {
-                    nodecol=basecols[i];
-                }
-            }
-            printf("%s%s%s %s%5.2f%s ",nodecol,cn->name,resetstr,cn->loadave > (float)cn->cores+1.5?Highlight:"",cn->loadave,resetstr);
-            printf(boxon);
-            putchar(boxchars[leftedge]);
-            int i=0;
-            for (;i<cn->cores;i++)
-            {
-                const char* colorstr = resetstr;
-                char entry = boxchars[dash];
-                if (i< cn-> users_using_count)
-                {
-                    int myuserno=UserNo(u,cn->users_using[i]->owner);
-                    colorstr = UserColourStr(myuserno,0);
-                    entry='X';
-                }
-                const char* bg = "";
-                if (cn->ramfree < 0) {bg=black;}
-                else if (((float)(cn->physram -cn->ramfree))/ ((float)cn->physram) > ((float)(i+1))/((float)cn->cores) ) {bg=gray;}
-                printf ("%s%s%c%s",colorstr,bg,entry,resetstr);
-            }
-            printf("%s",resetstr);
-            putchar(boxchars[rightedge]);
-            printf(boxoff);
-            for (;i<MAXCPUS;i++) {putchar(' ');} //blanks
-        }
-        else
-        {
-            printf("%s%s  ERROR ERROR ERROR      %s",Highlight,cn->name,resetstr);
-        }
+
+        if (cn->cores <= MINMAXCPUS) {actuallyprintnode(cn,propcount,props,u);}
         nodes[colindex]=nodes[colindex]-> next;
-        if (colindex+1==width) {printf("\n");colindex=0;}else {printf(" | ");colindex++;} //either print a serperator or a newline
+        if (colindex+1==width) {printf("\n");colindex=0;}else {printf(" ");colindex++;} //either print a serperator or a newline
         printed++;
 
     }

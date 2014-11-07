@@ -11,7 +11,7 @@
 void insertJobToUserJobList (user * u,job* j)
 {
     if (u->jobs==NULL) //special case for first job for a user
-        { u->jobs=j;}
+    { u->jobs=j;}
     else{ u->jobsend->usernext=j;}
     u->jobsend=j;
 }
@@ -154,7 +154,7 @@ job* GetJobInfo(const int connection,node* n,user** u) //u is a second return va
             {
                 if (!strcmp(attribs->resource,"remaining"))
                 {   //TODO: this does not quite accurately get seconds remaining
-                    curjob->secondsremaining=atoi(attribs->value)*10;
+                    curjob->secondsremaining=atoi(attribs->value)*10; //where does the 10 come from?
                 }
             }
             if (!strcmp(attribs->name,"Job_Owner"))
