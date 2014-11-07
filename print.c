@@ -191,7 +191,8 @@ void printnode(const node* n,const user* u)
         int offset=min(excesscount,c/nodecount_r);
         if (((c-offset)/nodecount_r)*nodecount_r==(c-offset))
             {nodes[(c-offset)/nodecount_r]=dummy;}
-        dummy= dummy-> next;
+        do
+        {dummy= dummy-> next;} while  ( dummy != NULL && dummy->cores > MINMAXCPUS);
         c++;
     }
     int colindex=0;
