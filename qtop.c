@@ -265,6 +265,7 @@ int main(int argc,char** argv)
                         "\n\n      Next, information about each user is printed (running / queued jobs etc."
                         "\n\n      Then, information about your jobs is printed."
                         "\n\n      Finally, the number of runnable jobs for each subcluster is reported according to how many CPUs you need"
+                        "\n\n      Currently testing a new layout in preparation for the new larger nodes"
                         "\n\n      options:"
                         "\n          --help print this string"
                         "\n          --filter ARG filter nodes to just a specific type (i.e. medphys/complex/cmt)"
