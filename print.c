@@ -402,7 +402,7 @@ void PropStats(const node* n)
                 int freecpus=cn->cores - cn->users_using_count;
                 props[i].free[0] += freecpus;
                 for (int j=2;j<16;j+=2) {props[i].free[j/2]+= freecpus/j; }
-                for (int j=16;j<=MAXCPUS;j+=4) {props[i].free[j/2]+= freecpus/j; }
+                for (int j=16;j<=MAXCPUS;j+=4) {props[i].free[8+(j-16)/4]+= freecpus/j; }
             }
             cn=cn->next;
         }
