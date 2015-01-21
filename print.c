@@ -161,7 +161,7 @@ void actuallyprintnode (const node* const cn,const int propcount, const propinfo
     }
     else
     {
-        printf("%s%s  ERROR ERROR ERROR      %s",Highlight,cn->name,resetstr);
+        printf("%s%s  ERROR ERROR ERROR  %s",Highlight,cn->name,resetstr);
     }
 }
 void printnode(const node* n,const user* u)
@@ -384,7 +384,8 @@ void printq(const job* j)
 void PropStats(const node* n)
 {
     int c = heading_nr("CPU Avail  |  1 ");
-    for (int i=2;i<=MAXCPUS;i+=2) {c+=printf("%3i ",i); }
+    for (int i=2;i<16;i+=2) {c+=printf("%3i ",i); }
+    for (int i=16;i<=MAXCPUS;i+=4) {c+=printf("%3i ",i); }
     for (;c<twidth;c++) {putchar(' ');}
     printf("%s\n",resetstr);
     propinfo* props;
@@ -400,12 +401,13 @@ void PropStats(const node* n)
             {
                 int freecpus=cn->cores - cn->users_using_count;
                 props[i].free[0] += freecpus;
-                for (int j=2;j<=MAXCPUS;j+=2) {props[i].free[j/2]+= freecpus/j; }
+                for (int j=2;j<16;j+=2) {props[i].free[j/2]+= freecpus/j; }
+                for (int j=16;j<=MAXCPUS;j+=4) {props[i].free[j/2]+= freecpus/j; }
             }
             cn=cn->next;
         }
         printf("%s%-10s |",basecols[i],props[i].propname);
-        for (int j=0;j<1+MAXCPUS/2;j++) {printf("%3i ",props[i].free[j]);}
+        for (int j=0;j<1+16/2  + (MAXCPUS-16)/4 ;j++) {printf("%3i ",props[i].free[j]);}
         printf("%s\n",resetstr);
     }
 }

@@ -1,4 +1,4 @@
-#define MAXCPUS 16
+#define MAXCPUS 32
 #define MINMAXCPUS 12
 #define MAX_QUEUES 10
 typedef struct node node;
