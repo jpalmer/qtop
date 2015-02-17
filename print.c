@@ -10,7 +10,7 @@
 
 
 //globals
-const char* colours[7]  =   {"\x1B[41m", "\x1b[42m", "\x1b[43m", "\x1b[44m", "\x1b[45m", "\x1b[46m",""};
+const char* colours[7]  =   {"\x1B[41;30m", "\x1b[42;30m", "\x1b[43;30m", "\x1b[44;30m", "\x1b[45;30m", "\x1b[46;30m",""};
 const char* fgcolours[7]=   {"\x1B[31m", "\x1b[32m", "\x1b[33m", "\x1b[34m", "\x1b[35m", "\x1b[36m",""};
 const char* basecols[]  =   {"\x1b[32m","\x1b[34m","\x1b[31m"};
 const char* Highlight   =   "\x1b[31m";
@@ -19,11 +19,11 @@ const char* underline   =   "\x1b[4m";
 const char* resetstr    =   "\x1b[0m";
 const char* boxon       =   "\x1b(0";
 const char* boxoff      =   "\x1b(B";
-const char* gray        =   "\x1b[100m";
+const char* gray        =   "\x1b[47m";
 const char* black        =  "\x1b[40m";
 char boxchars[]         =   {0x71,  0x74,       0x75       };
 typedef enum                {dash,  leftedge,   rightedge  } boxenum;
-const char * headingfmt =   "\x1b[1;97m\x1b[100m\x1b[4m";
+const char * headingfmt =   "\x1b[48;5;7;30;4m";
 char * me = NULL;
 int twidth = 1;
 void heading_(const char* s) {printf("%s%s%s\n",headingfmt,s,resetstr); }
@@ -32,7 +32,7 @@ int  heading_n(const char* s) {int r = heading_nr(s);printf(resetstr);return r;}
 void heading_fill(const char* s) {for (int c = heading_nr(s);c<twidth;c++){putchar(' ');}printf(resetstr);}
 void SetupTerm()
 {
-    if(!isatty(fileno(stdout)))
+ /*   if(!isatty(fileno(stdout)))
     {
         Highlight="";
         resetstr="";
@@ -48,11 +48,11 @@ void SetupTerm()
         headingfmt="";
     }
     else
-    {
+    {*/
         struct winsize w;
         ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
         twidth=w.ws_col;
-    }
+   // }
 }
 char StatStr (const job* j)
 {
