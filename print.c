@@ -5,6 +5,8 @@
 #include <time.h>  //maketime
 #include <stdlib.h> //malloc
 #include <math.h>    //ceil
+#include <sys/types.h>
+#include <pwd.h>
 #include "qtop.h" //examples of functions needed are incomplete
 #include "print.h"
 
@@ -89,7 +91,12 @@ int GetPropinfo(const node* n,propinfo** p)
 }
 int UserNo (const user* u,const user* cu) //algorithm for allocating numbers is currently n^2 - could make it better with sorting, but typically number of users is small, so current method is simpler
 {
-    if (me == NULL) { me = getenv("LOGNAME");}
+    if (me == NULL)
+    {
+        uid_t uid = geteuid();
+        struct passwd *pw = getpwuid(uid);
+        me = pw->pw_name;
+    }
     if (!(strcmp(cu->name,me))) {return 0;}
     const user* start = u;
     int i=1; //me always gets user 0
@@ -198,7 +205,7 @@ void printnode(const node* n,const user* u)
     int colindex=0;
     int printed = 0;
     node* bign=nodes[0];
-    do     
+    do
     {
         if (bign->cores > MINMAXCPUS) {actuallyprintnode(bign,propcount,props,u);printf("\n");}
         bign=bign->next;
