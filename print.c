@@ -89,13 +89,17 @@ int GetPropinfo(const node* n,propinfo** p)
     return propcounter;
 
 }
+void setme()
+{
+    uid_t uid = geteuid();
+    struct passwd *pw = getpwuid(uid);
+    me = pw->pw_name;
+}
 int UserNo (const user* u,const user* cu) //algorithm for allocating numbers is currently n^2 - could make it better with sorting, but typically number of users is small, so current method is simpler
 {
     if (me == NULL)
     {
-        uid_t uid = geteuid();
-        struct passwd *pw = getpwuid(uid);
-        me = pw->pw_name;
+        setme();
     }
     if (!(strcmp(cu->name,me))) {return 0;}
     const user* start = u;
@@ -124,7 +128,7 @@ const char* UserColourStr(const int userno,const int fg)
 }
 int UserCount(const user* u)
 {
-    if (me == NULL) { me = getenv("LOGNAME");}
+    if (me == NULL) { setme();}
     int ret = 1;
     while(u != NULL) {if (strcmp(u->name,me)){ret++;}u=u->next;}
     return ret;
