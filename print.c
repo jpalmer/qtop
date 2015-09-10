@@ -417,6 +417,11 @@ void PropStats(const node* n)
             }
             cn=cn->next;
         }
+        //hacky method to shorten the group names to make the text neater
+        if (strchr(props[i].propname,',') != NULL)
+        {
+            strchr(props[i].propname,',')[0] = 0;
+        }
         printf("%s%-10s |",basecols[i],props[i].propname);
         for (int j=0;j<1+16/2  + (MAXCPUS-16)/4 ;j++) {printf("%3i ",props[i].free[j]);}
         printf("%s\n",resetstr);
