@@ -133,7 +133,7 @@ int UserCount(const user* u)
     while(u != NULL) {if (strcmp(u->name,me)){ret++;}u=u->next;}
     return ret;
 }
-
+int HighLoadNode = 0;
 void actuallyprintnode (const node* const cn,const int propcount, const propinfo* const props,const user* const u)
 {
     if (cn->up==0)
@@ -146,7 +146,7 @@ void actuallyprintnode (const node* const cn,const int propcount, const propinfo
                 nodecol=basecols[i];
             }
         }
-        printf("%s%s%s %s%5.2f%s ",nodecol,cn->name,resetstr,cn->loadave > (float)cn->cores+1.5?Highlight:"",cn->loadave,resetstr);
+        printf("%s%s%s %s%5.2f%s ",nodecol,cn->name,resetstr,cn->loadave > (float)cn->cores+1.5?(HighLoadNode++, Highlight):"",cn->loadave,resetstr);
         printf(boxon);
         putchar(boxchars[leftedge]);
         int i=0;
@@ -442,5 +442,17 @@ void FreeCpu(const node* n)
             cn=cn->next;
         }
         printf("%i",props[i].free[0]);
+    }
+}
+void printfooter()
+{
+    if (HighLoadNode>0)
+    {
+        printf("============================\n");
+        printf("%s%s\n",Highlight,"ONE OR MORE NODES HAVE A HIGH LOAD AVERAGE");
+        printf("%s\n","THIS RESULTS IN DEGRADED PERFORMANCE");
+        printf("%s\n","MAYBE YOU NEED TO USE `-singleCompThread` WITH MATLAB?");
+        printf("%s",resetstr);
+        printf("============================\n");
     }
 }

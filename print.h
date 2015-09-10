@@ -7,6 +7,7 @@ void printmyjobs    (const user* u);
 void PropStats      (const node* n);
 void  FreeCpu        (const node* n);
 void SetupTerm      ();
+void printfooter();
 //structs
 typedef struct
 {

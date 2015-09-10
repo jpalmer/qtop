@@ -300,5 +300,6 @@ int main(int argc,char** argv)
     printq(j);
     printmyjobs(users);
     PropStats(n);
+    printfooter();
     return EXIT_SUCCESS;
 }
