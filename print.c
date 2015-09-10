@@ -281,27 +281,47 @@ void printmyjobs(const user* u)
         u=u->next;
     }
 }
-int printSomeJobs(const job* j, const jobstate s)
+void printSomeJobs(const job* j, const jobstate s)
 {
     int i = 0;
     int accum=0;
-    while(i<2 && j != NULL) //print the first 2 jobs in some state
+    while(j != NULL) //print the first 2 jobs in some state
     {
        if (j->state==s)
         {
+            if (i==0)
+            {
+                if (s==R)
+                {
+                    accum += printf("    Running       |");
+                }
+                else if (s==Q)
+                {
+                    accum += printf("    Queued        |");
+                }
+                else if (s==S)
+                {
+                    accum += printf("    Suspended     |");
+                }
+            }
+            accum += printf("%ix%i ",j->number,j->corecount);
             i++;
-            accum+= printf("%ix%i ",j->number,j->corecount);
         }
         j=j->usernext;
     }
-    while (j != NULL) {if (j->state==s) {accum += printf ("..");break;}j=j->next;}
-    return accum;
+
+    if (i!= 0)
+    {
+        for (;accum<(twidth);accum++) {printf(" ");} //fill in some white space
+        printf("\n");
+    }
+ //   while (j != NULL) {if (j->state==s) {accum += printf ("..");break;}j=j->next;}
 }
 void printuser(const user* u)
 {
     if (u != NULL)
     {
-        heading_fill("Name         | Run    Q Running jobs          Queued jobs           Suspended jobs");
+        heading_fill("Name              | CPU: Running  Queued");
         const user* start=u;
         const int count = UserCount(u);
         for (int i=0;i<count;i++)
@@ -311,14 +331,13 @@ void printuser(const user* u)
             {
                 if (UserNo(start,u)==i)
                 {
-                    int initial = printf ("%s%-13s|%4i %4i ",UserColourStr(i,1),u->realname,u->runcount,u->queuecount) - strlen(UserColourStr(i,1));
-                    int accum = printSomeJobs(u->jobs,R);
-                    for (;accum<22;accum++) {printf(" ");} //fill in some white space
-                    accum += printSomeJobs(u->jobs,Q);
-                    for (;accum<44;accum++) {printf(" ");} //fill in some white space
-                    accum += printSomeJobs(u->jobs,S);
-                    for (;accum<(twidth-initial);accum++) {printf(" ");} //fill in some white space
-                    printf("%s\n",resetstr);
+                    int initial = printf ("%s%-18s|         %4i    %4i",UserColourStr(i,1),u->realname,u->runcount,u->queuecount) - strlen(UserColourStr(i,1));
+                    for (;initial<(twidth);initial++) {printf(" ");} //fill in some white space
+                    printf("\n");
+                    printSomeJobs(u->jobs,R);
+                    printSomeJobs(u->jobs,Q);
+                    printSomeJobs(u->jobs,S);
+                    printf("%s",resetstr);
                 }
                 u=u->next;
             }
