@@ -281,7 +281,7 @@ void printmyjobs(const user* u)
         u=u->next;
     }
 }
-void printSomeJobs(const job* j, const jobstate s)
+void printSomeJobs(const job* j, const jobstate s,const int count)
 {
     int i = 0;
     int accum=0;
@@ -293,15 +293,15 @@ void printSomeJobs(const job* j, const jobstate s)
             {
                 if (s==R)
                 {
-                    accum += printf("    Running       |");
+                    accum += printf("    Running (%4i)| ",count);
                 }
                 else if (s==Q)
                 {
-                    accum += printf("    Queued        |");
+                    accum += printf("    Queued  (%4i)| ",count);
                 }
                 else if (s==S)
                 {
-                    accum += printf("    Suspended     |");
+                    accum += printf("    Suspended     | ");
                 }
             }
             accum += printf("%ix%i ",j->number,j->corecount);
@@ -321,7 +321,7 @@ void printuser(const user* u)
 {
     if (u != NULL)
     {
-        heading_fill("Name              | CPU: Running  Queued");
+        heading_fill("Name              | Jobs");
         const user* start=u;
         const int count = UserCount(u);
         for (int i=0;i<count;i++)
@@ -331,12 +331,12 @@ void printuser(const user* u)
             {
                 if (UserNo(start,u)==i)
                 {
-                    int initial = printf ("%s%-18s|         %4i    %4i",UserColourStr(i,1),u->realname,u->runcount,u->queuecount) - strlen(UserColourStr(i,1));
+                    int initial = printf ("%s%-18s| ",UserColourStr(i,1),u->realname) - strlen(UserColourStr(i,1));
                     for (;initial<(twidth);initial++) {printf(" ");} //fill in some white space
                     printf("\n");
-                    printSomeJobs(u->jobs,R);
-                    printSomeJobs(u->jobs,Q);
-                    printSomeJobs(u->jobs,S);
+                    printSomeJobs(u->jobs,R,u->runcount);
+                    printSomeJobs(u->jobs,Q,u->queuecount);
+                    printSomeJobs(u->jobs,S,0);
                     printf("%s",resetstr);
                 }
                 u=u->next;
