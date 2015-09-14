@@ -146,7 +146,7 @@ void actuallyprintnode (const node* const cn,const int propcount, const propinfo
                 nodecol=basecols[i];
             }
         }
-        printf("%s%s%s %s%5.2f%s ",nodecol,cn->name,resetstr,cn->loadave > (float)cn->cores+1.5?(HighLoadNode++, Highlight):"",cn->loadave,resetstr);
+        printf("%s%s%s %s%5.2f%s ",nodecol,cn->name,resetstr,cn->loadave > (float)cn->users_using_count+1.0?(HighLoadNode++, Highlight):"",cn->loadave,resetstr);
         printf(boxon);
         putchar(boxchars[leftedge]);
         int i=0;
