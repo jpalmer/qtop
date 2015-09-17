@@ -146,7 +146,7 @@ void actuallyprintnode (const node* const cn,const int propcount, const propinfo
                 nodecol=basecols[i];
             }
         }
-        printf("%s%s%s %s%5.2f%s ",nodecol,cn->name,resetstr,cn->loadave > (float)cn->users_using_count+1.0?(HighLoadNode++, Highlight):"",cn->loadave,resetstr);
+        printf("%s%s%s %s%5.2f%s ",nodecol,cn->name,resetstr,cn->loadave > (float)cn->users_using_count+1.5?(HighLoadNode++, Highlight):"",cn->loadave,resetstr);
         printf(boxon);
         putchar(boxchars[leftedge]);
         int i=0;
@@ -473,7 +473,7 @@ void printfooter()
     if (HighLoadNode>0)
     {
         printf("============================\n");
-        printf("%s%s\n",Highlight,"ONE OR MORE NODES HAVE A HIGH LOAD AVERAGE");
+        printf("%s%i%s\n",Highlight,HighLoadNode," NODES HAVE A HIGH LOAD AVERAGE (marked in red)");
         printf("%s\n","THIS RESULTS IN DEGRADED PERFORMANCE");
         printf("%s\n","MAYBE YOU NEED TO USE `-singleCompThread` WITH MATLAB?");
         printf("%s",resetstr);
